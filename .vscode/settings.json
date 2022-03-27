@@ -1,0 +1,29 @@
+{
+	"java.project.sourcePaths": ["src"],
+	"java.project.outputPath": "bin",
+	"java.project.referencedLibraries": ["lib/**/*.jar"],
+	"cSpell.words": [
+		"aibjck",
+		"Bitonic",
+		"dyck",
+		"Heapify",
+		"Kadane",
+		"koko",
+		"Kosa",
+		"kruskal",
+		"lmno",
+		"Manchers",
+		"Parenthesization",
+		"poei",
+		"posi",
+		"pqrs",
+		"prei",
+		"prsi",
+		"Raju",
+		"Surpasser",
+		"tribonacci",
+		"Vooting",
+		"Warshall",
+		"wxyz"
+	]
+}
