@@ -1,7 +1,6 @@
 package Bits;
 
 import java.util.*;
-import Trie.intro_Trie;
 
 public class intro {
 
@@ -20,32 +19,54 @@ public class intro {
 
     public int onTOoff(int num, int idx) {
         int mask = (1 << (idx - 1));
-        if ((mask & num) != 0) {
-            mask = ~mask;
-            num &= mask;
-        }
+        if ((mask & num) != 0)
+            num ^= mask;
         return num;
     }
 
     public int offTOon(int num, int idx) {
         int mask = (1 << (idx - 1));
         if ((mask & num) == 0)
-            num |= mask;
+            num ^= mask;
         return num;
     }
 
-    public int toggle(int num, int idx) {
+    public int flipBit(int num, int idx) {
         int mask = (1 << (idx - 1));
         num ^= mask;
         return num;
     }
 
+    public int flipBitsInRange(int num, int si, int ei) {
+        for (int i = si; i <= ei; i++)
+            flipBit(num, i);
+        return num;
+    }
+
+    public int bitsToBeFlippedToMakeNumbersEqual(int a, int b) {
+        int res = a ^ b;
+        return countBits(res);
+    }
+
+    // *https://www.youtube.com/watch?v=GbH8PcqKosk&list=PL-Jc9J83PIiFJRioti3ZV7QabwoJK6eKe&index=26
+    public int swapOddEvenBits(int num) {
+        int odd = 0x55555555;
+        int even = 0xAAAAAAAA;
+
+        odd &= num;
+        even &= num;
+
+        odd <<= 1; // ? left shift => double
+        even >>= 1; // ? right shift => half
+
+        return odd | even;
+    }
+
     public int firstMostSignificantSetBit(int num) {
-        int idx = -1;
-        for (int i = 0; i < 32; i++)
+        for (int i = 31; i >= 0; i--)
             if (((1 << i) & num) != 0)
-                idx = i;
-        return idx;
+                return i;
+        return -1;
     }
 
     public int firstLeastSignificantSetBit(int num) {
@@ -53,6 +74,7 @@ public class intro {
         return (num == 0) ? -1 : (int) Math.log(n);
     }
 
+    // *Kernighan's Algorithm
     public int countBits(int num) {
         int count = 0;
         while (num != 0) {
@@ -76,12 +98,37 @@ public class intro {
         return res;
     }
 
-    public int copyParticularBit(int x, int y, int idx) {
-        int mask = on(0, idx);
-        if ((y & mask) != 0)
-            x |= mask;
-        return x;
+    // *https://www.youtube.com/watch?v=DMTw6pP5zTg&list=PL-Jc9J83PIiFJRioti3ZV7QabwoJK6eKe&index=15
+    public int countSmallerNumbersWithSameSetBits(int n) {
+        return (n == 0 || n == 1) ? n : countSmallerNumbersWithSameSetBits(n, countBits(n), 31);
+    }
 
+    public int countSmallerNumbersWithSameSetBits(int n, int bits, int i) {
+        if (n == 0 || n == 1)
+            return n;
+
+        int mask = (1 << i);
+        int ans = 0;
+        if ((mask & n) == 0)
+            ans += countSmallerNumbersWithSameSetBits(n, bits, i - 1);
+        else {
+            ans += countSmallerNumbersWithSameSetBits(n, bits - 1, i - 1);
+            ans += ncr(i - 1, bits);
+        }
+
+        return ans;
+    }
+
+    public int ncr(int n, int r) {
+        return factorial(n) / (factorial(r) * factorial(n - r));
+    }
+
+    public int factorial(int n) {
+        return (n == 0 || n == 1) ? n : n * factorial(n - 1);
+    }
+
+    public int copyParticularBit(int x, int y, int idx) {
+        return ((1 << idx) == 0) ? off(x, idx) : on(x, idx);
     }
 
     public int copyBitsInRange(int x, int y, int l, int r) {
@@ -120,20 +167,34 @@ public class intro {
 
     }
 
-    public int flipBitsInRange(int num, int si, int ei) {
-        for (int i = si; i <= ei; i++) {
-            int mask = (1 << i);
-            if ((num & mask) != 0)
-                num = off(num, i + 1);
-            else
-                num = on(num, i + 1);
-        }
-        return num;
-    }
+    public int reverseBitsInRange(int num, int l, int r) {
 
-    public int bitsToBeFlipped(int a, int b) {
-        int res = a ^ b;
-        return countBits(res);
+        int si = l;
+        int ei = r;
+
+        int length = ei - si + 1;
+
+        int res = 0;
+
+        while (si < ei) {
+
+            int mask1 = (1 << si);
+            int mask2 = (1 << ei);
+
+            mask1 &= num;
+            mask2 &= num;
+
+            if (mask1 != 0)
+                res |= (1 << (length - si - 1));
+            if (mask2 != 0)
+                res |= (1 << (length - ei - 1));
+
+            si++;
+            ei--;
+        }
+
+        return res;
+
     }
 
     public int highestPowerOf2(int num) {
@@ -194,6 +255,30 @@ public class intro {
         return res;
     }
 
+    public int subtract(int a, int b) {
+
+        int res = 0;
+        int carry = 0;
+        for (int i = 0; i < 32; i++) {
+            int mask1 = (1 << i);
+            int mask2 = (1 << i);
+
+            mask1 &= a;
+            mask2 &= b;
+
+            int bit1 = (mask1 != 0) ? 1 : 0;
+            int bit2 = (mask2 != 0) ? 1 : 0;
+
+            int ans = bit1 ^ bit2 ^ carry;
+            if (ans != 0)
+                res |= (1 << i);
+
+            carry = (~(bit1 ^ bit2) & carry) | (~bit1 & bit2);
+        }
+
+        return res;
+    }
+
     public int division(int a, int b) {
         if (a > 0 && b == 0)
             return Integer.MAX_VALUE;
@@ -202,9 +287,7 @@ public class intro {
         if (b == 1)
             return a;
 
-        int sign = 0;
-        if ((a < 0 && b > 0) || (b < 0 && a > 0))
-            sign = 1;
+        int sign = ((a < 0 && b > 0) || (b < 0 && a > 0)) ? 1 : 0;
 
         a = Math.abs(a);
         b = Math.abs(b);
@@ -224,7 +307,8 @@ public class intro {
         return (sign == 1) ? -quotient : quotient;
     }
 
-    // ? *** we can calculate square without recursion i.e, 15 -> 8 + 4 + 2 + 1
+    // ? *** we can calculate square without recursion i.e, 15*15 -> 15*(8 + 4 + 2 +
+    // 1)
     public int square(int num) {
         if (num == 0 || num == 1)
             return num;
@@ -275,21 +359,18 @@ public class intro {
         for (int ele : arr)
             num ^= ele;
 
-        // ********** AND operation with 2's complement of number gives first on bit
-        int mask = (~num + 1) & num;
+        int mask = (1 << firstLeastSignificantSetBit(num));
 
         int ans1 = 0;
         int ans2 = 0;
 
-        for (int ele : arr) {
+        for (int ele : arr)
             if ((ele & mask) == 0)
                 ans1 ^= ele;
             else
                 ans2 ^= ele;
-        }
 
         return new int[] { ans1, ans2 };
-
     }
 
     public boolean multipleOf3(int num) {
@@ -335,9 +416,7 @@ public class intro {
             for (int ele : arr)
                 if (((i << i) & ele) != 0)
                     count++;
-
-            // ? ****** Important
-            res += (count - (n - count)) * 2;
+            res += (count - (n - count)) * 2; // ? ****** Important
         }
         return res;
     }
@@ -384,7 +463,6 @@ public class intro {
     // * skipped and kth person is killed in circle. The task is to choose the place
     // * in the initial circle so that you are the last one remaining and so
     // * survive.
-
     public int joseph_problem(int num, int k) {
         if (num == 1)
             return 0;
@@ -411,6 +489,17 @@ public class intro {
         return res;
     }
 
+    public int maxOrValuePair(int[] arr) {
+        int max = 0;
+        for (int ele : arr)
+            max = Math.max(max, ele);
+        int ans = 0;
+        for (int ele : arr)
+            if (ele != max)
+                ans = Math.max(ans, max | ele);
+        return ans;
+    }
+
     public int maxANDvaluePair(int[] arr) {
         int res = 0;
         int mask = 0;
@@ -427,16 +516,162 @@ public class intro {
         return res;
     }
 
-    public int maxXORvaluePair(int[] arr) {
-        intro_Trie.Trie trie = new intro_Trie.Trie();
-        trie.constructTrie(arr);
+    public static class Trie {
 
-        return trie.maxXOR(arr);
+        public class Node {
+            int value;
+            Node[] bits;
+            int count;
+
+            public Node() {
+                this.value = -1;
+                this.bits = new Node[2];
+                this.count = 0;
+            }
+        }
+
+        private Node root;
+
+        public Trie() {
+            this.root = new Node();
+        }
+
+        public void insert(int ele) {
+            Node curr = root;
+            for (int i = 31; i >= 0; i--) {
+                int idx = (((1 << i) & ele) != 0) ? 1 : 0;
+                if (curr.bits[idx] == null)
+                    curr.bits[idx] = new Node();
+                curr.bits[idx].count++;
+                curr = curr.bits[idx];
+            }
+            curr.value = ele;
+        }
+
+        public void constructTrie(int[] arr) {
+            for (int ele : arr) {
+                Node curr = root;
+                for (int i = 31; i >= 0; i--) {
+                    int mask = (1 << i);
+                    int idx = ((mask & ele) != 0) ? 1 : 0;
+                    if (curr.bits[idx] == null)
+                        curr.bits[idx] = new Node();
+                    curr.bits[idx].count++;
+                    curr = curr.bits[idx];
+                }
+                curr.value = ele;
+            }
+        }
+
+        public int minXOR(int ele) {
+
+            Node curr = root;
+            int ans = 0;
+            for (int i = 31; i >= 0; i--) {
+                int currBit = (ele & (1 << i)) & 1;
+                if (curr.bits[currBit] != null) { // ****** we can go in same direction
+                    ans |= (1 << i);
+                    curr = curr.bits[currBit];
+                } else
+                    curr = curr.bits[currBit ^ 1];
+            }
+            return ans;
+        }
+
+        public int maxXOR(int ele) {
+
+            Node curr = root;
+            int ans = 0;
+            for (int i = 31; i >= 0; i--) {
+                int mask = (1 << i);
+                int currBit = ((mask & ele) != 0) ? 1 : 0;
+                if (curr.bits[currBit ^ 1] != null) { // **** we can go in opposite direction
+                    ans |= (1 << i);
+                    curr = curr.bits[currBit ^ 1];
+                } else
+                    curr = curr.bits[currBit];
+            }
+            return ans;
+        }
+
+        public int countLessNumbers(int ele, int bound) {
+            return countLessNumbers(this.root, ele, bound, 31);
+        }
+
+        private int getCount(Node node) {
+            return (node == null) ? 0 : node.count;
+        }
+
+        private int countLessNumbers(Node node, int ele, int bound, int idx) {
+
+            if (node == null)
+                return 0;
+            if (idx == -1)
+                return getCount(node);
+
+            int valueBit = (((1 << idx) & ele) != 0) ? 1 : 0;
+            int boundBit = (((1 << idx) & bound) != 0) ? 1 : 0;
+
+            if (valueBit == 0) {
+                if (boundBit == 0)
+                    return countLessNumbers(node.bits[0], ele, bound, idx - 1);
+                else
+                    return getCount(node.bits[0]) + countLessNumbers(node.bits[1], ele, bound, idx - 1);
+            } else {
+                if (boundBit == 0)
+                    return countLessNumbers(node.bits[1], ele, bound, idx - 1);
+                else
+                    return getCount(node.bits[1]) + countLessNumbers(node.bits[0], ele, bound, idx - 1);
+            }
+
+        }
+
     }
 
-    // **** Sorting can be also used;
+    public int maxXORvaluePair(int[] arr) {
+        Trie trie = new Trie();
+        trie.constructTrie(arr);
+
+        int ans = Integer.MIN_VALUE;
+        for (int ele : arr)
+            ans = Math.max(ans, trie.maxXOR(ele));
+        return ans;
+    }
+
     public int minXORvaluePair(int[] arr) {
-        intro_Trie.Trie trie = new intro_Trie.Trie();
+        Arrays.sort(arr);
+
+        int ans = Integer.MAX_VALUE;
+        for (int i = 0; i < arr.length - 1; i++)
+            ans = Math.min(ans, arr[i] ^ arr[i + 1]);
+        return ans;
+    }
+
+    public int xorPairInRange(int[] arr, int l, int r) {
+        Trie trie = new Trie();
+        trie.insert(arr[0]);
+
+        int ans = 0;
+        for (int i = 1; i < arr.length; i++)
+            ans += trie.countLessNumbers(arr[i], r) - trie.countLessNumbers(arr[i], l - 1);
+        return ans;
+    }
+
+    public int maxXORvalueSubarray(int[] arr) {
+        Trie trie = new Trie();
+        trie.insert(arr[0]);
+
+        int res = Integer.MIN_VALUE;
+        for (int i = 1; i < arr.length; i++) {
+            int currMax = trie.maxXOR(arr[i]);
+            res = Math.max(res, currMax);
+            trie.insert(arr[i]);
+        }
+        return res;
+    }
+
+    public int minXORvalueSubarray(int[] arr) {
+        Trie trie = new Trie();
         trie.insert(arr[0]);
 
         int res = Integer.MAX_VALUE;
