@@ -8,17 +8,6 @@ import Tree.binaryTree.TreeNode;
 
 public class methods {
 
-    // ****** Method 1 -> Recursive O(n^2)
-    public void reverseStack1(Stack s) {
-        if (s.isEmpty())
-            return;
-
-        int re = s.pop();
-        reverseStack1(s);
-
-        insertBottom(s, re);
-    }
-
     public void insertBottom(Stack s, int ele) {
         if (s.isEmpty()) {
             s.push(ele);
@@ -31,8 +20,34 @@ public class methods {
         s.push(re);
     }
 
-    // ****** Method 2 -> Iterative Using Space O(n)
+    // ****** Method 1 -> Recursive O(n^2)
+    public void reverseStack1(Stack s) {
+        if (s.isEmpty())
+            return;
+
+        int re = s.pop();
+        reverseStack1(s);
+
+        insertBottom(s, re);
+    }
+
+    // ****** Method 2 -> Using Queue
     public void reverseStack2(Stack s) {
+        Queue<Integer> queue = new ArrayDeque<>();
+        while (!s.isEmpty())
+            queue.add(s.pop());
+
+        while (!queue.isEmpty())
+            s.push(queue.remove());
+    }
+
+    // ****** Method 3 -> Using LinkedList
+    public void reverseStack3(StackLL s) {
+        s.reverse();
+    }
+
+    // ****** Method 4 -> Iterative Using Space O(n)
+    public void reverseStack4(Stack s) {
 
         StackLL stack = new StackLL();
         while (!s.isEmpty())
@@ -165,7 +180,6 @@ public class methods {
                     break;
                 int width = i - curr;
                 res += width * (Math.min(arr[s.peek()], arr[i]) - arr[curr]);
-
             }
             s.push(i++);
         }
@@ -214,10 +228,6 @@ public class methods {
         return res;
     }
 
-    // ***** The span Si of the stock’s price on a given day i is defined as the
-    // ***** maximum number of consecutive days just before the given day, for which
-    // ***** the price of the stock on the current day is less than its price on the
-    // ***** given day.
     public int[] stockSpan(int[] arr) {
 
         java.util.Stack<int[]> s = new java.util.Stack<>();
@@ -310,7 +320,7 @@ public class methods {
             if (ch == '(')
                 s.push(0);
             else {
-                if (s.isEmpty())
+                if (s.isEmpty() || s.peek() != '(')
                     return false;
                 s.pop();
             }
@@ -336,7 +346,7 @@ public class methods {
                 }
                 if (!s.isEmpty())
                     s.pop();
-                if (count <= 1)
+                if (count < 1) // If count of operators is <= 1
                     return true;
             }
         }
@@ -394,147 +404,6 @@ public class methods {
         }
 
         return res;
-    }
-
-    public class Node {
-
-        TreeNode node;
-        boolean left;
-        boolean right;
-        boolean self;
-
-        public Node(TreeNode node) {
-            this.left = this.right = this.self = false;
-            this.node = node;
-        }
-    }
-
-    public ArrayList<Integer> preOrder(TreeNode node) {
-
-        java.util.Stack<Node> s = new java.util.Stack<>();
-        s.push(new Node(node));
-
-        ArrayList<Integer> res = new ArrayList<>();
-
-        while (!s.isEmpty()) {
-            if (!s.peek().self) {
-                s.peek().self = true;
-                res.add(s.peek().node.value);
-            } else if (!s.peek().left) {
-                s.peek().left = true;
-                if (s.peek().node.left != null)
-                    s.push(new Node(s.peek().node.left));
-            } else if (!s.peek().right) {
-                s.peek().right = true;
-                if (s.peek().node.right != null)
-                    s.push(new Node(s.peek().node.right));
-            } else {
-                s.pop();
-            }
-        }
-
-        return res;
-    }
-
-    public ArrayList<Integer> inOrder(TreeNode node) {
-
-        java.util.Stack<Node> s = new java.util.Stack<>();
-        s.push(new Node(node));
-
-        ArrayList<Integer> res = new ArrayList<>();
-
-        while (!s.isEmpty()) {
-            if (!s.peek().left) {
-                s.peek().left = true;
-                if (s.peek().node.left != null)
-                    s.push(new Node(s.peek().node.left));
-            } else if (!s.peek().self) {
-                s.peek().self = true;
-                res.add(s.peek().node.value);
-            } else if (!s.peek().right) {
-                s.peek().right = true;
-                if (s.peek().node.right != null)
-                    s.push(new Node(s.peek().node.right));
-            } else {
-                s.pop();
-            }
-        }
-
-        return res;
-    }
-
-    public ArrayList<Integer> postOrder(TreeNode node) {
-
-        java.util.Stack<Node> s = new java.util.Stack<>();
-        s.push(new Node(node));
-
-        ArrayList<Integer> res = new ArrayList<>();
-
-        while (!s.isEmpty()) {
-            if (!s.peek().left) {
-                s.peek().left = true;
-                if (s.peek().node.left != null)
-                    s.push(new Node(s.peek().node.left));
-            } else if (!s.peek().right) {
-                s.peek().right = true;
-                if (s.peek().node.right != null)
-                    s.push(new Node(s.peek().node.right));
-            } else if (!s.peek().self) {
-                s.peek().self = true;
-                res.add(s.peek().node.value);
-            } else {
-                s.pop();
-            }
-        }
-
-        return res;
-    }
-
-    public void towerOfHanoi1(int n, char a, char b, char c) {
-
-        if (n == 0)
-            return;
-
-        towerOfHanoi1(n - 1, a, c, b);
-        System.out.println("Move the disk from : " + a + " to " + b);
-        towerOfHanoi1(n - 1, c, b, a);
-    }
-
-    public class hanoiNode {
-        int n;
-        char a, b, c;
-        boolean aTOcWITHb, self, cTObWITHa;
-
-        public hanoiNode(char a, char b, char c) {
-            this.a = a;
-            this.b = b;
-            this.c = c;
-            this.aTOcWITHb = this.self = this.cTObWITHa = false;
-        }
-    }
-
-    public void towerOfHanoi2(int n, char a, char b, char c) {
-
-        java.util.Stack<hanoiNode> s = new java.util.Stack<>();
-        s.push(new hanoiNode(a, b, c));
-
-        while (!s.isEmpty()) {
-            hanoiNode rn = s.peek();
-            if (rn.aTOcWITHb) {
-                rn.aTOcWITHb = true;
-                if (rn.n != 0)
-                    s.push(new hanoiNode(rn.a, rn.c, rn.b));
-            } else if (rn.self) {
-                rn.self = true;
-                System.out.println("Move the disk from : " + rn.a + " to " + rn.b);
-            } else if (rn.cTObWITHa) {
-                rn.cTObWITHa = true;
-                if (rn.n != 0)
-                    s.push(new hanoiNode(rn.c, rn.b, rn.a));
-            } else {
-                s.pop();
-            }
-        }
     }
 
     public static HashMap<Character, Integer> precedence = new HashMap<Character, Integer>();
@@ -759,6 +628,148 @@ public class methods {
         }
 
         return s.peek();
+    }
+
+    public class Node {
+
+        TreeNode node;
+        boolean left;
+        boolean right;
+        boolean self;
+
+        public Node(TreeNode node) {
+            this.left = this.right = this.self = false;
+            this.node = node;
+        }
+    }
+
+    public ArrayList<Integer> preOrder(TreeNode node) {
+
+        java.util.Stack<Node> s = new java.util.Stack<>();
+        s.push(new Node(node));
+
+        ArrayList<Integer> res = new ArrayList<>();
+
+        while (!s.isEmpty()) {
+            if (!s.peek().self) {
+                s.peek().self = true;
+                res.add(s.peek().node.value);
+            } else if (!s.peek().left) {
+                s.peek().left = true;
+                if (s.peek().node.left != null)
+                    s.push(new Node(s.peek().node.left));
+            } else if (!s.peek().right) {
+                s.peek().right = true;
+                if (s.peek().node.right != null)
+                    s.push(new Node(s.peek().node.right));
+            } else {
+                s.pop();
+            }
+        }
+
+        return res;
+    }
+
+    public ArrayList<Integer> inOrder(TreeNode node) {
+
+        java.util.Stack<Node> s = new java.util.Stack<>();
+        s.push(new Node(node));
+
+        ArrayList<Integer> res = new ArrayList<>();
+
+        while (!s.isEmpty()) {
+            if (!s.peek().left) {
+                s.peek().left = true;
+                if (s.peek().node.left != null)
+                    s.push(new Node(s.peek().node.left));
+            } else if (!s.peek().self) {
+                s.peek().self = true;
+                res.add(s.peek().node.value);
+            } else if (!s.peek().right) {
+                s.peek().right = true;
+                if (s.peek().node.right != null)
+                    s.push(new Node(s.peek().node.right));
+            } else {
+                s.pop();
+            }
+        }
+
+        return res;
+    }
+
+    public ArrayList<Integer> postOrder(TreeNode node) {
+
+        java.util.Stack<Node> s = new java.util.Stack<>();
+        s.push(new Node(node));
+
+        ArrayList<Integer> res = new ArrayList<>();
+
+        while (!s.isEmpty()) {
+            if (!s.peek().left) {
+                s.peek().left = true;
+                if (s.peek().node.left != null)
+                    s.push(new Node(s.peek().node.left));
+            } else if (!s.peek().right) {
+                s.peek().right = true;
+                if (s.peek().node.right != null)
+                    s.push(new Node(s.peek().node.right));
+            } else if (!s.peek().self) {
+                s.peek().self = true;
+                res.add(s.peek().node.value);
+            } else {
+                s.pop();
+            }
+        }
+
+        return res;
+    }
+
+    public void towerOfHanoi1(int n, char a, char b, char c) {
+
+        if (n == 0)
+            return;
+
+        towerOfHanoi1(n - 1, a, c, b);
+        System.out.println("Move the disk from : " + a + " to " + b);
+        towerOfHanoi1(n - 1, c, b, a);
+    }
+
+    public class hanoiNode {
+        int n;
+        char a, b, c;
+        boolean aTOcWITHb, self, cTObWITHa;
+
+        public hanoiNode(int n, char a, char b, char c) {
+            this.n = n;
+            this.a = a;
+            this.b = b;
+            this.c = c;
+            this.aTOcWITHb = this.self = this.cTObWITHa = false;
+        }
+    }
+
+    public void towerOfHanoi2(int n, char a, char b, char c) {
+
+        java.util.Stack<hanoiNode> s = new java.util.Stack<>();
+        s.push(new hanoiNode(n, a, b, c));
+
+        while (!s.isEmpty()) {
+            hanoiNode rn = s.peek();
+            if (!rn.aTOcWITHb) {
+                rn.aTOcWITHb = true;
+                if (rn.n != 0)
+                    s.push(new hanoiNode(rn.n - 1, rn.a, rn.c, rn.b));
+            } else if (!rn.self) {
+                rn.self = true;
+                System.out.println("Move the disk from : " + rn.a + " to " + rn.b);
+            } else if (!rn.cTObWITHa) {
+                rn.cTObWITHa = true;
+                if (rn.n != 0)
+                    s.push(new hanoiNode(rn.n - 1, rn.c, rn.b, rn.a));
+            } else {
+                s.pop();
+            }
+        }
     }
 
 }

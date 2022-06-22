@@ -73,7 +73,7 @@ public class unionFind extends directedGraph {
 
             int r = vertices[i][0];
             int c = vertices[i][1];
-            int cellNo = r * n + c;
+            int cellNo = (r * n) + c;
 
             arr[r][c] = 1;
             res++;

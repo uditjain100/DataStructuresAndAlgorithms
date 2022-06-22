@@ -172,17 +172,6 @@ public class intro_ll {
             this.head = prev;
         }
 
-        public Node middleElement() {
-            Node slow = this.head;
-            Node fast = this.head;
-
-            while (fast != null && fast.next != null) {
-                slow = slow.next;
-                fast = fast.next.next;
-            }
-            return slow;
-        }
-
         public void display(Node head) {
             Node curr = head;
 
@@ -1011,6 +1000,7 @@ public class intro_ll {
             }
         }
 
+        // *https://www.geeksforgeeks.org/flattening-a-linked-list/
         public Node flatten1(Node head) {
 
             if (head == null)
@@ -1099,7 +1089,7 @@ public class intro_ll {
             }
         }
 
-        // https://www.geeksforgeeks.org/flatten-a-multi-level-linked-list-set-2-depth-wise/
+        // **https://www.geeksforgeeks.org/flatten-a-multi-level-linked-list-set-2-depth-wise/
         public Node flattenDepthWise(Node head) {
             if (head == null)
                 return head;
@@ -1118,7 +1108,6 @@ public class intro_ll {
             return head;
         }
 
-        // https://www.geeksforgeeks.org/flatten-a-linked-list-with-next-and-child-pointers/
         public Node flattenBreadthWise(Node head) {
             if (head == null)
                 return head;
@@ -1135,6 +1124,32 @@ public class intro_ll {
 
             curr.next = child;
             return head;
+        }
+
+        // ***https://www.geeksforgeeks.org/flatten-a-linked-list-with-next-and-child-pointers/
+        public Node flatten(Node node) {
+            java.util.LinkedList<Node> queue = new java.util.LinkedList<>();
+            queue.addFirst(node);
+
+            Node newHead = new Node(-1);
+            Node newCurr = newHead;
+
+            while (!queue.isEmpty()) {
+                int size = queue.size();
+                while (size-- > 0) {
+                    Node rn = queue.removeFirst();
+                    newCurr.next = rn;
+
+                    while (newCurr != null) {
+                        if (newCurr.child != null)
+                            queue.addLast(newCurr.child);
+                        newCurr.child = null;
+                        newCurr = newCurr.next;
+                    }
+                }
+            }
+
+            return newHead.next;
         }
 
     }

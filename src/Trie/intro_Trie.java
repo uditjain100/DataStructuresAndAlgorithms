@@ -5,7 +5,7 @@ import java.util.*;
 public class intro_Trie {
 
     // **** Standard Trie with delete
-    public static class Trie2 {
+    public static class Trie {
 
         public class Node {
 
@@ -29,7 +29,7 @@ public class intro_Trie {
 
         private Node root;
 
-        public Trie2() {
+        public Trie() {
             this.root = new Node();
         }
 
@@ -69,10 +69,13 @@ public class intro_Trie {
         }
 
         public boolean search(String str) {
+            return search(this.root, str);
+        }
+
+        private boolean search(Node curr, String str) {
             if (str.contains("."))
                 return searchLikeGoogle(str, this.root, 0);
 
-            Node curr = this.root;
             for (char ch : str.toCharArray()) {
                 if (curr.children[ch - 'a'] == null)
                     return false;
@@ -102,14 +105,16 @@ public class intro_Trie {
             return res;
         }
 
-        public boolean prefixSearch(String str) {
+        public String prefixSearch(String str) {
             Node curr = this.root;
             for (char ch : str.toCharArray()) {
+                if (curr.isWord)
+                    return curr.word;
                 if (curr.children[ch - 'a'] == null)
-                    return false;
+                    return (curr.isWord) ? curr.word : str;
                 curr = curr.children[ch - 'a'];
             }
-            return true;
+            return (curr.isWord) ? curr.word : str;
         }
 
         public int prefixSearchUptoK(String str, int k) {
@@ -143,6 +148,28 @@ public class intro_Trie {
             return sb.toString();
         }
 
+        public void preOrder(Node curr) {
+            if (curr == null)
+                return;
+
+            if (curr.isWord)
+                System.out.println(curr.word);
+
+            for (Node child : curr.children)
+                preOrder(child);
+        }
+
+        public void postOrder(Node curr) {
+            if (curr == null)
+                return;
+
+            for (Node child : curr.children)
+                postOrder(child);
+
+            if (curr.isWord)
+                System.out.println(curr.word);
+        }
+
         public void delete(String str) {
             if (this.root == null)
                 return;
@@ -174,53 +201,19 @@ public class intro_Trie {
             return curr;
         }
 
-        public void preOrder(Node curr) {
-            if (curr == null)
-                return;
-
-            if (curr.isWord)
-                System.out.println(curr.word);
-
-            for (Node child : curr.children)
-                preOrder(child);
-        }
-
-        public void postOrder(Node curr) {
-            if (curr == null)
-                return;
-
-            for (Node child : curr.children)
-                postOrder(child);
-
-            if (curr.isWord)
-                System.out.println(curr.word);
-        }
-
-        // *https://www.geeksforgeeks.org/palindrome-pair-in-an-array-of-words-or-strings/
         public boolean checkPalindromePair(String str) {
             String reverseString = new StringBuilder(str).reverse().toString();
-            if (customSearch(this.root, reverseString))
+            if (search(this.root, reverseString))
                 return true;
             for (int i = 0; i < 26; i++) {
-                if (customSearch(this.root.children[i], reverseString))
+                if (search(this.root.children[i], reverseString))
                     return true;
             }
-            if (customSearch(this.root, reverseString.substring(0, str.length() - 1)))
+            if (search(this.root, reverseString.substring(0, str.length() - 1)))
                 return true;
             return false;
         }
 
-        private boolean customSearch(Node curr, String str) {
-
-            for (char ch : str.toCharArray()) {
-                if (curr.children[ch - 'a'] == null)
-                    return false;
-                curr = curr.children[ch - 'a'];
-            }
-            return curr.isWord;
-        }
-
-        // *https://www.geeksforgeeks.org/implement-a-phone-directory/
         public ArrayList<String> phoneSearch(String str) {
 
             ArrayList<String> res = new ArrayList<>();
@@ -356,6 +349,46 @@ public class intro_Trie {
             visited[i][j] = false;
         }
 
+        public String replaceWord(String[] arr) {
+            StringBuilder sb = new StringBuilder();
+            for (String str : arr)
+                sb.append(prefixSearch(str)).append(" ");
+            return sb.toString();
+        }
+
+        public boolean searchIfConcatenated(String str) {
+            return searchConcatenatedWords(str, 0, 0);
+        }
+
+        private boolean searchConcatenatedWords(String str, int idx, int subStringNumber) {
+            if (idx == str.length())
+                return subStringNumber > 1;
+
+            Node curr = this.root;
+            boolean res = false;
+            for (int i = idx; i < str.length(); i++) {
+                char ch = str.charAt(i);
+                if (curr.children[ch - 'a'] == null)
+                    return false;
+                if (curr.children[ch - 'a'].isWord)
+                    res = res || searchConcatenatedWords(str, i + 1, subStringNumber + 1);
+                if (res)
+                    return res;
+                curr = curr.children[ch - 'a'];
+            }
+            return res;
+        }
+
+        public boolean searchIfLongest(String str) {
+            Node curr = this.root;
+            for (char ch : str.toCharArray()) {
+                if (curr.children[ch - 'a'] == null || !curr.children[ch - 'a'].isWord)
+                    return false;
+                curr = curr.children[ch - 'a'];
+            }
+            return curr.isWord;
+        }
+
     }
 
     // **** for binary numeric values
@@ -406,94 +439,6 @@ public class intro_Trie {
                 curr = curr.bits[idx];
             }
             return curr.count;
-        }
-
-    }
-
-    public static class Trie4 {
-
-        public class Node {
-
-            Node[] children;
-            boolean isWord;
-            String word;
-
-            public Node() {
-                this.children = new Node[26];
-                this.isWord = false;
-                this.word = "";
-            }
-
-        }
-
-        private Node root;
-
-        public Trie4() {
-            this.root = new Node();
-        }
-
-        public void insert(String str) {
-            Node curr = this.root;
-            for (char ch : str.toCharArray()) {
-                if (curr.children[ch - 'a'] == null)
-                    curr.children[ch - 'a'] = new Node();
-                curr = curr.children[ch - 'a'];
-            }
-            curr.isWord = true;
-            curr.word = str;
-        }
-
-        public boolean searchIfConcatenated(String str) {
-            return searchConcatenatedWords(str, 0, 0);
-        }
-
-        private boolean searchConcatenatedWords(String str, int idx, int subStringNumber) {
-            if (idx == str.length())
-                return subStringNumber > 1;
-
-            Node curr = this.root;
-            boolean res = false;
-            for (int i = idx; i < str.length(); i++) {
-                char ch = str.charAt(i);
-                if (curr.children[ch - 'a'] == null)
-                    return false;
-                if (curr.children[ch - 'a'].isWord)
-                    res = res || searchConcatenatedWords(str, i + 1, subStringNumber + 1);
-                if (res)
-                    return res;
-                curr = curr.children[ch - 'a'];
-            }
-            return res;
-        }
-
-        public boolean searchIfLongest(String str) {
-            Node curr = this.root;
-            for (char ch : str.toCharArray()) {
-                if (curr.children[ch - 'a'] == null || !curr.children[ch - 'a'].isWord)
-                    return false;
-                curr = curr.children[ch - 'a'];
-            }
-            return curr.isWord;
-        }
-
-        public String searchPrefix(String str) {
-            Node curr = this.root;
-            for (char ch : str.toCharArray()) {
-                if (curr.isWord)
-                    return curr.word;
-                if (curr.children[ch - 'a'] == null)
-                    return (curr.isWord) ? curr.word : str;
-                curr = curr.children[ch - 'a'];
-            }
-            return (curr.isWord) ? curr.word : str;
-
-        }
-
-        public String replaceWord(String[] arr) {
-            StringBuilder sb = new StringBuilder();
-            for (String str : arr)
-                sb.append(searchPrefix(str)).append(" ");
-            return sb.toString();
         }
 
     }

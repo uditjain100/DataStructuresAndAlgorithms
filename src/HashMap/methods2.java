@@ -94,7 +94,7 @@ public class methods2 {
 
             count += i - j;
 
-            // ? Release Bog and Small
+            // ? Release Big and Small
             char ch = str.charAt(idx);
             bigMap.put(ch, bigMap.getOrDefault(ch, 0) - 1);
             smallMap.put(ch, smallMap.getOrDefault(ch, 0) - 1);

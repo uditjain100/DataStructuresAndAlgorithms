@@ -126,26 +126,12 @@ public class binaryTree {
         }
     }
 
-    public class Pair {
-
-        int count;
-        int[] arr;
-        int idx;
-
-        public Pair(int c, int[] a, int i) {
-            this.count = c;
-            this.arr = a;
-            this.idx = i;
-        }
-
-    }
-
     public void constructFromAncestorMatrix(int[][] arr) {
 
         int n = arr.length;
 
-        PriorityQueue<Pair> pq = new PriorityQueue<>((a, b) -> {
-            return a.count - b.count;
+        PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> {
+            return a[0] - b[0];
         });
 
         for (int i = 0; i < n; i++) {
@@ -153,7 +139,7 @@ public class binaryTree {
             for (int j = 0; j < n; j++)
                 if (arr[i][j] == 1)
                     count++;
-            pq.add(new Pair(count, arr[i], i));
+            pq.add(new int[] { count, i });
         }
 
         TreeNode[] parent = new TreeNode[n];
@@ -163,11 +149,13 @@ public class binaryTree {
             nodes[i] = new TreeNode(i);
 
         while (!pq.isEmpty()) {
-            Pair rp = pq.remove();
-            if (rp.count != 0) {
+            int[] rp = pq.remove();
+            int count = rp[0];
+            int idx = rp[1];
+            if (count != 0) {
                 for (int j = 0; j < n; j++) {
-                    if (rp.idx != j && arr[rp.idx][j] == 1 && parent[j] == null) {
-                        parent[j] = nodes[rp.idx];
+                    if (idx != j && arr[idx][j] == 1 && parent[j] == null) {
+                        parent[j] = nodes[idx];
                         if (parent[j].left == null)
                             parent[j].left = nodes[j];
                         else
@@ -176,7 +164,7 @@ public class binaryTree {
                 }
             }
             if (pq.isEmpty())
-                this.root = nodes[rp.idx];
+                this.root = nodes[idx];
         }
 
     }
@@ -260,35 +248,57 @@ public class binaryTree {
         return find(node.left, target) || find(node.right, target);
     }
 
+    public TreeNode search(int target) {
+        return search(this.root, target);
+    }
+
+    private TreeNode search(TreeNode node, int target) {
+        if (node == null || node.value == target)
+            return node;
+
+        TreeNode left = search(node.left, target);
+        TreeNode right = search(node.right, target);
+
+        return (left != null) ? left : right;
+    }
+
     public int diameter() {
-        return diameter(this.root).diameter;
+        return diameter(this.root)[1];
     }
 
-    public class DiaPair {
-
-        int height;
-        int diameter;
-
-        public DiaPair(int h, int d) {
-            this.height = h;
-            this.diameter = d;
-        }
-
-    }
-
-    private DiaPair diameter(TreeNode node) {
+    private int[] diameter(TreeNode node) {
         if (node == null)
-            return new DiaPair(-1, 0);
+            return new int[] { -1, 0 };
 
-        DiaPair left = diameter(node.left);
-        DiaPair right = diameter(node.right);
+        int[] left = diameter(node.left);
+        int[] right = diameter(node.right);
 
-        DiaPair ndp = new DiaPair(-1, 0);
+        int height = Math.max(left[0], right[0]) + 1;
+        int diameter = Math.max(Math.max(left[1], right[1]), left[0] + right[0] + 2);
 
-        ndp.height = Math.max(left.height, right.height) + 1;
-        ndp.diameter = Math.max(Math.max(left.diameter, right.diameter), left.height + right.height + 2);
+        return new int[] { height, diameter };
+    }
 
-        return ndp;
+    public int width() {
+        leftMostIdx = 0;
+        rightMostIdx = 0;
+
+        width(this.root, 0);
+
+        return rightMostIdx - leftMostIdx + 1;
+    }
+
+    int leftMostIdx, rightMostIdx;
+
+    private void width(TreeNode node, int level) {
+        if (node == null)
+            return;
+
+        leftMostIdx = Math.min(leftMostIdx, level);
+        rightMostIdx = Math.max(rightMostIdx, level);
+
+        width(node.left, level - 1);
+        width(node.right, level + 1);
     }
 
     public ArrayList<Integer> preOrder() {
@@ -408,26 +418,107 @@ public class binaryTree {
         System.out.println();
     }
 
-    public int width() {
-        leftMostIdx = 0;
-        rightMostIdx = 0;
-
-        width(this.root, 0);
-
-        return rightMostIdx - leftMostIdx + 1;
+    public ArrayList<Integer> levelOrderToInOrder(int[] levelOrder) { // ? Similarly to PreOrder and PostOrder
+        ArrayList<Integer> list = new ArrayList<>();
+        levelOrderToInOrder(levelOrder, 0, list);
+        return list;
     }
 
-    int leftMostIdx, rightMostIdx;
-
-    private void width(TreeNode node, int level) {
-        if (node == null)
+    private void levelOrderToInOrder(int[] levelOrder, int idx, ArrayList<Integer> list) {
+        if (idx >= levelOrder.length)
             return;
 
-        leftMostIdx = Math.min(leftMostIdx, level);
-        rightMostIdx = Math.max(rightMostIdx, level);
+        levelOrderToInOrder(levelOrder, idx * 2 + 1, list);
+        list.add(levelOrder[idx]);
+        levelOrderToInOrder(levelOrder, idx * 2 + 2, list);
+    }
 
-        width(node.left, level - 1);
-        width(node.right, level + 1);
+    public class ViewPair {
+
+        int level;
+        TreeNode node;
+
+        public ViewPair(int l, TreeNode n) {
+            this.level = l;
+            this.node = n;
+        }
+
+    }
+
+    public ArrayList<ArrayList<Integer>> verticalOrder() {
+
+        int w = width();
+
+        LinkedList<ViewPair> queue = new LinkedList<>();
+        queue.addLast(new ViewPair(-leftMostIdx, this.root));
+
+        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
+        for (int i = 0; i < w; i++)
+            list.add(new ArrayList<>());
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            while (size-- > 0) {
+                ViewPair rn = queue.removeFirst();
+                list.get(rn.level).add(rn.node.value);
+                if (rn.node.left != null)
+                    queue.addLast(new ViewPair(rn.level - 1, rn.node.left));
+                if (rn.node.right != null)
+                    queue.addLast(new ViewPair(rn.level + 1, rn.node.right));
+            }
+        }
+        System.out.println(list);
+        return list;
+    }
+
+    public void diagonalOrder() {
+        width();
+
+        LinkedList<ViewPair> queue = new LinkedList<>();
+        queue.addLast(new ViewPair(0, this.root));
+
+        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
+        for (int i = 0; i <= -leftMostIdx; i++)
+            list.add(new ArrayList<>());
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            while (size-- > 0) {
+                ViewPair rn = queue.removeFirst();
+                list.get(rn.level).add(rn.node.value);
+                if (rn.node.left != null)
+                    queue.addLast(new ViewPair(rn.level + 1, rn.node.left));
+                if (rn.node.right != null)
+                    queue.addLast(new ViewPair(rn.level, rn.node.right));
+            }
+        }
+        for (ArrayList<Integer> l : list)
+            System.out.println(l);
+    }
+
+    public void antiDiagonalOrder() {
+        width();
+
+        LinkedList<ViewPair> queue = new LinkedList<>();
+        queue.addLast(new ViewPair(0, this.root));
+
+        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
+        for (int i = 0; i <= rightMostIdx; i++)
+            list.add(new ArrayList<>());
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            while (size-- > 0) {
+                ViewPair rn = queue.removeFirst();
+                list.get(rn.level).add(rn.node.value);
+                if (rn.node.left != null)
+                    queue.addLast(new ViewPair(rn.level, rn.node.left));
+                if (rn.node.right != null)
+                    queue.addLast(new ViewPair(rn.level + 1, rn.node.right));
+            }
+        }
+        for (ArrayList<Integer> l : list)
+            System.out.println(l);
     }
 
     public void leftView() {
@@ -483,18 +574,6 @@ public class binaryTree {
             level++;
         }
         System.out.println(list);
-    }
-
-    public class ViewPair {
-
-        int level;
-        TreeNode node;
-
-        public ViewPair(int l, TreeNode n) {
-            this.level = l;
-            this.node = n;
-        }
-
     }
 
     public ArrayList<Integer> topView() {
@@ -564,56 +643,6 @@ public class binaryTree {
         return list;
     }
 
-    public void diagonalOrder() {
-        width();
-
-        LinkedList<ViewPair> queue = new LinkedList<>();
-        queue.addLast(new ViewPair(0, this.root));
-
-        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
-        for (int i = 0; i <= -leftMostIdx; i++)
-            list.add(new ArrayList<>());
-
-        while (!queue.isEmpty()) {
-            int size = queue.size();
-            while (size-- > 0) {
-                ViewPair rn = queue.removeFirst();
-                list.get(rn.level).add(rn.node.value);
-                if (rn.node.left != null)
-                    queue.addLast(new ViewPair(rn.level + 1, rn.node.left));
-                if (rn.node.right != null)
-                    queue.addLast(new ViewPair(rn.level, rn.node.right));
-            }
-        }
-        for (ArrayList<Integer> l : list)
-            System.out.println(l);
-    }
-
-    public void antiDiagonalOrder() {
-        width();
-
-        LinkedList<ViewPair> queue = new LinkedList<>();
-        queue.addLast(new ViewPair(0, this.root));
-
-        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
-        for (int i = 0; i <= rightMostIdx; i++)
-            list.add(new ArrayList<>());
-
-        while (!queue.isEmpty()) {
-            int size = queue.size();
-            while (size-- > 0) {
-                ViewPair rn = queue.removeFirst();
-                list.get(rn.level).add(rn.node.value);
-                if (rn.node.left != null)
-                    queue.addLast(new ViewPair(rn.level, rn.node.left));
-                if (rn.node.right != null)
-                    queue.addLast(new ViewPair(rn.level + 1, rn.node.right));
-            }
-        }
-        for (ArrayList<Integer> l : list)
-            System.out.println(l);
-    }
-
     public ArrayList<TreeNode> rootToNodePath(int target) {
         ArrayList<TreeNode> path = new ArrayList<>();
         rootToNodePath(this.root, target, path);
@@ -681,6 +710,43 @@ public class binaryTree {
         return leftDone || rightDone || selfDone;
     }
 
+    public int distanceBetweenTwoNodes(int a, int b) {
+        distance = -1;
+        int[] res = distanceBetweenTwoNodes(this.root, a, b);
+        return res[0];
+    }
+
+    public int distance;
+
+    public int[] distanceBetweenTwoNodes(TreeNode node, int a, int b) {
+        if (node == null)
+            return new int[] { -1, 0 };
+
+        boolean selfDone = false;
+        if (node.value == a || node.value == b)
+            selfDone = true;
+
+        int[] left = distanceBetweenTwoNodes(node.left, a, b);
+        int[] right = distanceBetweenTwoNodes(node.right, a, b);
+
+        if (distance != -1)
+            return new int[] { distance, 1 };
+
+        if ((left[1] == 1 && right[1] == 1) || (selfDone && right[1] == 1)
+                || (left[1] == 1 && selfDone) && distance != -1) {
+            distance = left[0] + right[0];
+            return new int[] { distance, 1 };
+        }
+
+        if (selfDone)
+            return new int[] { 1, 1 };
+        if (left[1] == 1)
+            return new int[] { left[0] + 1, 1 };
+        if (right[1] == 1)
+            return new int[] { right[0] + 1, 1 };
+        return new int[] { -1, 0 };
+    }
+
     public ArrayList<TreeNode> kDistanceChildren(TreeNode node, int k) {
         ArrayList<TreeNode> list = new ArrayList<>();
         kDistanceChildren(node, k, list);
@@ -717,24 +783,20 @@ public class binaryTree {
         kDistanceChildrenWithBlockNode(node.right, blockNode, k - 1, list);
     }
 
+    public ArrayList<TreeNode> kDistanceNodes1(int target, int k) {
+        return kDistanceNodes1(search(target), k);
+    }
+
     // ? Using Space
-    public ArrayList<TreeNode> kDistanceNodes1(TreeNode node, int k) {
+    private ArrayList<TreeNode> kDistanceNodes1(TreeNode node, int k) {
         ArrayList<TreeNode> path = rootToNodePath(node.value);
+        path.add(null);
+        int n = path.size();
 
         ArrayList<TreeNode> list = new ArrayList<>();
-        for (int i = path.size() - 1; i >= 0; i--) {
-            if (k - (path.size() - i - 1) >= 0) {
-                if (i == path.size() - 1)
-                    list.addAll(
-                            kDistanceChildrenWithBlockNode(path.get(i), null, k - (path.size() - i - 1)));
-                else
-                    list.addAll(
-                            kDistanceChildrenWithBlockNode(path.get(i), path.get(i + 1), k - (path.size() - i - 1)));
-            }
-        }
-        for (TreeNode n : list)
-            System.out.print(n.value + ", ");
-        System.out.println();
+        for (int i = n - 2; i >= 0; i--)
+            if (k - (n - i - 2) >= 0)
+                list.addAll(kDistanceChildrenWithBlockNode(path.get(i), path.get(i + 1), k - (n - i - 2)));
         return list;
     }
 
@@ -745,7 +807,6 @@ public class binaryTree {
     }
 
     private int kDistanceNodes2(TreeNode node, int target, int k, ArrayList<TreeNode> list) {
-
         if (node == null)
             return -1;
 
@@ -765,343 +826,6 @@ public class binaryTree {
             return rightDistance + 1;
         }
         return -1;
-    }
-
-    public int maxPathSum() {
-        return maxPathSum(this.root);
-    }
-
-    private int maxPathSum(TreeNode node) {
-        if (node == null)
-            return Integer.MIN_VALUE;
-
-        int leftMax = maxPathSum(node.left);
-        int rightMax = maxPathSum(node.left);
-
-        int a = leftMax + node.value;
-        int b = rightMax + node.value;
-        int c = node.value;
-        int d = leftMax + node.value + rightMax;
-
-        return Math.max(Math.max(a, b), Math.max(c, d));
-    }
-
-    public TreeNode getMirror() {
-        return mirror(this.root);
-    }
-
-    private TreeNode mirror(TreeNode node) {
-        if (node == null)
-            return null;
-
-        TreeNode nn = new TreeNode(node.value);
-
-        nn.left = mirror(node.right);
-        nn.right = mirror(node.left);
-
-        return nn;
-    }
-
-    public boolean isMirror(TreeNode node1, TreeNode node2) {
-        if (node1 == null && node2 == null)
-            return true;
-        if (node1 == null || node2 == null)
-            return false;
-        if (node1.value != node2.value)
-            return false;
-
-        return isMirror(node1.left, node2.right) && isMirror(node1.right, node2.left);
-    }
-
-    public boolean isFoldable() {
-        return isMirror(this.root, this.root);
-    }
-
-    public TreeNode DLLprev;
-    public TreeNode DLLhead;
-
-    public void TreeToDLL() {
-        DLLprev = DLLhead = null;
-        DLL(this.root);
-        this.root = DLLhead;
-    }
-
-    private void DLL(TreeNode node) {
-        if (node == null)
-            return;
-
-        DLL(node.left);
-
-        if (DLLhead == null)
-            DLLhead = node;
-        else {
-            DLLprev.right = node;
-            node.left = DLLprev;
-        }
-        DLLprev = node;
-
-        DLL(node.right);
-    }
-
-    public String serialize() {
-        return serialize(this.root);
-    }
-
-    private String serialize(TreeNode node) {
-        if (node == null)
-            return "-1";
-
-        String left = serialize(node.left);
-        String right = serialize(node.right);
-
-        return "" + node.value + "," + left + "," + right;
-    }
-
-    public TreeNode deserialize(String str) {
-
-        String[] arr = str.split(",");
-        int[] preOrder = new int[arr.length];
-
-        int i = 0;
-        for (String s : arr)
-            preOrder[i++] = Integer.parseInt(s);
-
-        this.idx = 0;
-        return deserialize(preOrder);
-    }
-
-    public int idx;
-
-    private TreeNode deserialize(int[] preOrder) {
-
-        if (idx == preOrder.length)
-            return null;
-
-        if (preOrder[idx] == -1) {
-            idx++;
-            return null;
-        }
-
-        TreeNode nn = new TreeNode(preOrder[idx++]);
-
-        nn.left = deserialize(preOrder);
-        nn.right = deserialize(preOrder);
-        return nn;
-    }
-
-    public boolean isDuplicateSubTreeExist() {
-        duplicatePresent = false;
-        isDuplicateSubTreeExist(this.root, new HashSet<>());
-        return duplicatePresent;
-    }
-
-    boolean duplicatePresent;
-
-    private String isDuplicateSubTreeExist(TreeNode node, HashSet<String> set) {
-        if (node == null)
-            return "-1";
-
-        String left = isDuplicateSubTreeExist(node.left, set);
-        String right = isDuplicateSubTreeExist(node.right, set);
-
-        String str = "" + node.value + left + right;
-        if (set.contains(str))
-            duplicatePresent = true;
-        else
-            set.add(str);
-        return str;
-    }
-
-    public ArrayList<TreeNode> allDuplicates() {
-        ArrayList<TreeNode> res = new ArrayList<>();
-
-        HashMap<String, Integer> map = new HashMap<>();
-        allDuplicates(this.root, map);
-
-        for (String str : map.keySet())
-            if (map.get(str) != 1)
-                res.add(deserialize(str));
-
-        return res;
-    }
-
-    private String allDuplicates(TreeNode node, HashMap<String, Integer> map) {
-        if (node == null)
-            return "-1";
-
-        String left = allDuplicates(node.left, map);
-        String right = allDuplicates(node.right, map);
-
-        String str = "" + node.value + "," + left + "," + right;
-
-        map.putIfAbsent(str, 0);
-        map.put(str, map.get(str) + 1);
-
-        return str;
-    }
-
-    public void treeToSumTree() {
-        treeToSumTree(this.root);
-    }
-
-    private int treeToSumTree(TreeNode node) {
-        if (node == null)
-            return 0;
-
-        int value = node.value;
-        node.value = treeToSumTree(node.left) + treeToSumTree(node.right);
-        return value + node.value;
-    }
-
-    public boolean isSumTree() {
-        return isSumTree(this.root)[1] == 1;
-    }
-
-    private int[] isSumTree(TreeNode node) {
-        if (node == null)
-            return new int[] { 0, 1 };
-        if (node.left == null && node.right == null)
-            return new int[] { node.value, 1 };
-
-        int[] left = isSumTree(node.left);
-        int[] right = isSumTree(node.right);
-
-        if (left[1] == 0 || right[1] == 0 || node.value != left[0] + right[0])
-            return new int[] { 0, 0 };
-
-        return new int[] { node.value + left[0] + right[0], 1 };
-    }
-
-    public boolean isIsomorphic(TreeNode node1, TreeNode node2) {
-        if (node1 == null && node2 == null)
-            return true;
-        if (node2 == null || node1 == null)
-            return false;
-        if (node1.value != node2.value)
-            return false;
-
-        return (isIsomorphic(node1.left, node2.left) && isIsomorphic(node1.right, node2.right))
-                || (isIsomorphic(node1.left, node2.right) && isIsomorphic(node1.right, node2.left));
-    }
-
-    class Packet {
-        int in;
-        int ex;
-
-        public Packet() {
-            this.in = this.ex = 0;
-        }
-
-        public Packet(int in, int ex) {
-            this.in = in;
-            this.ex = ex;
-        }
-    }
-
-    public int houseRobber3(TreeNode node) {
-        Packet p = houseRobber(node);
-        return Math.max(p.in, p.ex);
-    }
-
-    private Packet houseRobber(TreeNode node) {
-        if (node == null)
-            return new Packet();
-
-        Packet left = houseRobber(node.left);
-        Packet right = houseRobber(node.right);
-
-        int in = left.ex + right.ex + node.value;
-        int ex = Math.max(left.ex, left.in) + Math.max(right.ex, right.in);
-
-        return new Packet(in, ex);
-    }
-
-    public ArrayList<Integer> levelOrderToInOrder(int[] levelOrder) {
-        ArrayList<Integer> list = new ArrayList<>();
-        levelOrderToInOrder(levelOrder, 0, list);
-        return list;
-    }
-
-    private void levelOrderToInOrder(int[] levelOrder, int idx, ArrayList<Integer> list) {
-        if (idx >= levelOrder.length)
-            return;
-
-        levelOrderToInOrder(levelOrder, idx * 2 + 1, list);
-        list.add(levelOrder[idx]);
-        levelOrderToInOrder(levelOrder, idx * 2 + 2, list);
-    }
-
-    public int minSwapsFromBinaryToBST(int[] levelOrder) {
-
-        ArrayList<Integer> inOrder = levelOrderToInOrder(levelOrder);
-
-        System.out.println(inOrder);
-
-        int[][] arr = new int[inOrder.size()][2];
-
-        for (int i = 0; i < inOrder.size(); i++) {
-            arr[i][0] = inOrder.get(i);
-            arr[i][1] = i;
-        }
-
-        Arrays.sort(arr, (a, b) -> a[0] - b[0]);
-
-        int count = 0;
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i][1] != i) {
-                swap(arr, i, arr[i][1]);
-                count++;
-                i--;
-            }
-        }
-
-        return count;
-    }
-
-    private void swap(int[][] arr, int i, int j) {
-        int temp = arr[i][0];
-        arr[i][0] = arr[j][0];
-        arr[j][0] = temp;
-        temp = arr[i][1];
-        arr[i][1] = arr[j][1];
-        arr[j][1] = temp;
-    }
-
-    public int distanceBetweenTwoNodes(int a, int b) {
-        distance = -1;
-        int[] res = distanceBetweenTwoNodes(this.root, a, b);
-        return res[0];
-    }
-
-    public int distance;
-
-    public int[] distanceBetweenTwoNodes(TreeNode node, int a, int b) {
-        if (node == null)
-            return new int[] { -1, 0 };
-
-        boolean selfDone = false;
-        if (node.value == a || node.value == b)
-            selfDone = true;
-
-        int[] left = distanceBetweenTwoNodes(node.left, a, b);
-        int[] right = distanceBetweenTwoNodes(node.right, a, b);
-
-        if (distance != -1)
-            return new int[] { distance, 1 };
-
-        if ((left[1] == 1 && right[1] == 1) || (selfDone && right[1] == 1)
-                || (left[1] == 1 && selfDone) && distance != -1) {
-            distance = left[0] + right[0];
-            return new int[] { distance, 1 };
-        }
-
-        if (selfDone)
-            return new int[] { 1, 1 };
-        if (left[1] == 1)
-            return new int[] { left[0] + 1, 1 };
-        if (right[1] == 1)
-            return new int[] { right[0] + 1, 1 };
-        return new int[] { -1, 0 };
     }
 
     public ArrayList<ArrayList<Integer>> kSumPathFromRoot(int k) {
@@ -1174,6 +898,370 @@ public class binaryTree {
             }
         }
         preOrder.remove(preOrder.size() - 1);
+    }
+
+    public int maxPathSum() {
+        return maxPathSum(this.root);
+    }
+
+    private int maxPathSum(TreeNode node) {
+        if (node == null)
+            return Integer.MIN_VALUE;
+
+        int leftMax = maxPathSum(node.left);
+        int rightMax = maxPathSum(node.left);
+
+        int a = leftMax + node.value;
+        int b = rightMax + node.value;
+        int c = node.value;
+        int d = leftMax + node.value + rightMax;
+
+        return Math.max(Math.max(a, b), Math.max(c, d));
+    }
+
+    public TreeNode getMirror() {
+        return mirror(this.root);
+    }
+
+    private TreeNode mirror(TreeNode node) {
+        if (node == null)
+            return null;
+
+        TreeNode nn = new TreeNode(node.value);
+
+        nn.left = mirror(node.right);
+        nn.right = mirror(node.left);
+
+        return nn;
+    }
+
+    public boolean isMirror(TreeNode node1, TreeNode node2) {
+        if (node1 == null && node2 == null)
+            return true;
+        if (node1 == null || node2 == null)
+            return false;
+        if (node1.value != node2.value)
+            return false;
+
+        return isMirror(node1.left, node2.right) && isMirror(node1.right, node2.left);
+    }
+
+    public boolean isFoldable() {
+        return isMirror(this.root, this.root);
+    }
+
+    public void treeToSumTree() {
+        treeToSumTree(this.root);
+    }
+
+    private int treeToSumTree(TreeNode node) {
+        if (node == null)
+            return 0;
+
+        int value = node.value;
+        node.value = treeToSumTree(node.left) + treeToSumTree(node.right);
+        return value + node.value;
+    }
+
+    public boolean isSumTree() {
+        return isSumTree(this.root)[1] == 1;
+    }
+
+    private int[] isSumTree(TreeNode node) {
+        if (node == null)
+            return new int[] { 0, 1 };
+        if (node.left == null && node.right == null)
+            return new int[] { node.value, 1 };
+
+        int[] left = isSumTree(node.left);
+        int[] right = isSumTree(node.right);
+
+        if (left[1] == 0 || right[1] == 0 || node.value != left[0] + right[0])
+            return new int[] { 0, 0 };
+
+        return new int[] { node.value + left[0] + right[0], 1 };
+    }
+
+    public boolean isIsomorphic(TreeNode node1, TreeNode node2) {
+        if (node1 == null && node2 == null)
+            return true;
+        if (node2 == null || node1 == null)
+            return false;
+        if (node1.value != node2.value)
+            return false;
+
+        return (isIsomorphic(node1.left, node2.left) && isIsomorphic(node1.right, node2.right))
+                || (isIsomorphic(node1.left, node2.right) && isIsomorphic(node1.right, node2.left));
+    }
+
+    public String serialize() {
+        return serialize(this.root);
+    }
+
+    private String serialize(TreeNode node) {
+        if (node == null)
+            return "-1";
+
+        String left = serialize(node.left);
+        String right = serialize(node.right);
+
+        return "" + node.value + "," + left + "," + right;
+    }
+
+    public TreeNode deserialize(String str) {
+
+        String[] arr = str.split(",");
+        int[] preOrder = new int[arr.length];
+
+        int i = 0;
+        for (String s : arr)
+            preOrder[i++] = Integer.parseInt(s);
+
+        this.idx = 0;
+        return deserialize(preOrder);
+    }
+
+    public int idx;
+
+    private TreeNode deserialize(int[] preOrder) {
+
+        if (idx == preOrder.length)
+            return null;
+
+        if (preOrder[idx] == -1) {
+            idx++;
+            return null;
+        }
+
+        TreeNode nn = new TreeNode(preOrder[idx++]);
+
+        nn.left = deserialize(preOrder);
+        nn.right = deserialize(preOrder);
+        return nn;
+    }
+
+    public TreeNode DLLprev;
+    public TreeNode DLLhead;
+
+    public void TreeToDLL() {
+        DLLprev = DLLhead = null;
+        DLL(this.root);
+        this.root = DLLhead;
+    }
+
+    private void DLL(TreeNode node) {
+        if (node == null)
+            return;
+
+        DLL(node.left);
+
+        if (DLLhead == null)
+            DLLhead = node;
+        else {
+            DLLprev.right = node;
+            node.left = DLLprev;
+        }
+        DLLprev = node;
+
+        DLL(node.right);
+    }
+
+    public boolean isDuplicateSubTreeExist() {
+        duplicatePresent = false;
+        isDuplicateSubTreeExist(this.root, new HashSet<>());
+        return duplicatePresent;
+    }
+
+    boolean duplicatePresent;
+
+    private String isDuplicateSubTreeExist(TreeNode node, HashSet<String> set) {
+        if (node == null)
+            return "-1";
+
+        String left = isDuplicateSubTreeExist(node.left, set);
+        String right = isDuplicateSubTreeExist(node.right, set);
+
+        String str = "" + node.value + left + right;
+        if (set.contains(str))
+            duplicatePresent = true;
+        else
+            set.add(str);
+        return str;
+    }
+
+    public ArrayList<TreeNode> allDuplicates() {
+        ArrayList<TreeNode> res = new ArrayList<>();
+
+        HashMap<String, Integer> map = new HashMap<>();
+        allDuplicates(this.root, map);
+
+        for (String str : map.keySet())
+            if (map.get(str) != 1)
+                res.add(deserialize(str));
+
+        return res;
+    }
+
+    private String allDuplicates(TreeNode node, HashMap<String, Integer> map) {
+        if (node == null)
+            return "-1";
+
+        String left = allDuplicates(node.left, map);
+        String right = allDuplicates(node.right, map);
+
+        String str = "" + node.value + "," + left + "," + right;
+
+        map.put(str, map.getOrDefault(str, 0) + 1);
+        return str;
+    }
+
+    class Packet {
+        int in;
+        int ex;
+
+        public Packet() {
+            this.in = this.ex = 0;
+        }
+
+        public Packet(int in, int ex) {
+            this.in = in;
+            this.ex = ex;
+        }
+    }
+
+    public int houseRobber3(TreeNode node) {
+        Packet p = houseRobber(node);
+        return Math.max(p.in, p.ex);
+    }
+
+    private Packet houseRobber(TreeNode node) {
+        if (node == null)
+            return new Packet();
+
+        Packet left = houseRobber(node.left);
+        Packet right = houseRobber(node.right);
+
+        int in = left.ex + right.ex + node.value;
+        int ex = Math.max(left.ex, left.in) + Math.max(right.ex, right.in);
+
+        return new Packet(in, ex);
+    }
+
+    public int minSwapsFromBinaryToBST(int[] levelOrder) {
+
+        ArrayList<Integer> inOrder = levelOrderToInOrder(levelOrder);
+
+        int[][] arr = new int[inOrder.size()][2];
+
+        for (int i = 0; i < inOrder.size(); i++) {
+            arr[i][0] = inOrder.get(i);
+            arr[i][1] = i;
+        }
+
+        Arrays.sort(arr, (a, b) -> a[0] - b[0]);
+
+        int count = 0;
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i][1] != i) {
+                swap(arr, i, arr[i][1]);
+                count++;
+                i--;
+            }
+        }
+
+        return count;
+    }
+
+    private void swap(int[][] arr, int i, int j) {
+        int temp = arr[i][0];
+        arr[i][0] = arr[j][0];
+        arr[j][0] = temp;
+        temp = arr[i][1];
+        arr[i][1] = arr[j][1];
+        arr[j][1] = temp;
+    }
+
+    public TreeNode binaryToBST(TreeNode node) {
+        ArrayList<Integer> list = inOrder();
+        Collections.sort(list);
+
+        this.idx = 0;
+        fill(node, list);
+        return node;
+    }
+
+    public void fill(TreeNode node, ArrayList<Integer> list) {
+        if (node == null)
+            return;
+
+        fill(node.left, list);
+        node.value = list.get(idx++);
+        fill(node.right, list);
+    }
+
+    // *** With Space
+    public int largestBST1(TreeNode node) {
+        ArrayList<Integer> list = inOrder();
+
+        int res = 1;
+        int count = 1;
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (list.get(i) < list.get(i + 1))
+                count++;
+            else {
+                res = Math.max(res, count);
+                count = 1;
+            }
+        }
+        res = Math.max(res, count);
+        return res;
+    }
+
+    public int largestBST2() {
+        return largestBST2(this.root).largestBSTsize;
+    }
+
+    class Node {
+        int min, max;
+        boolean isBst;
+        int size;
+        int largestBSTsize;
+
+        public Node() {
+            this.min = Integer.MAX_VALUE;
+            this.max = Integer.MIN_VALUE;
+            this.isBst = true;
+            this.largestBSTsize = this.size = 0;
+        }
+
+        public Node(int min, int max, boolean isBST, int size, int bstSize) {
+            this.min = min;
+            this.max = max;
+            this.isBst = isBST;
+            this.largestBSTsize = bstSize;
+            this.size = size;
+        }
+    }
+
+    private Node largestBST2(TreeNode node) {
+        if (node == null)
+            return new Node();
+
+        Node left = largestBST2(node.left);
+        Node right = largestBST2(node.right);
+
+        int min = Math.min(node.value, Math.min(left.min, right.min));
+        int max = Math.max(node.value, Math.max(left.max, right.max));
+        int size = left.size + right.size + 1;
+
+        if (left.isBst && right.isBst) {
+            if (left.max < node.value && right.min > node.value)
+                return new Node(min, max, true, size, size);
+            else
+                return new Node(min, max, false, size, Math.max(left.size, right.size));
+        }
+
+        return new Node(min, max, false, size, Math.max(left.largestBSTsize, right.largestBSTsize));
     }
 
 }

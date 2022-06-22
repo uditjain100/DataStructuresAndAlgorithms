@@ -35,6 +35,55 @@ public class methods {
         return lcs;
     }
 
+    // *https://www.geeksforgeeks.org/largest-subset-whose-all-elements-are-fibonacci-numbers/
+    public int largestFibonacciSubsequence(int[] arr) {
+        int max = Integer.MIN_VALUE;
+        for (int ele : arr)
+            max = Math.max(max, ele);
+
+        HashSet<Integer> set = new HashSet<>();
+
+        set.add(0);
+
+        int i = 0;
+        int j = 0;
+        while (i + j < max) {
+            int sum = i + j;
+            i = j;
+            j = sum;
+            set.add(sum);
+        }
+
+        int count = 0;
+        for (int ele : arr)
+            if (set.contains(ele))
+                count++;
+        return count;
+    }
+
+    public boolean isArithmeticSequence(int[] arr) {
+        if (arr.length == 0 || arr.length == 1)
+            return true;
+
+        int n = arr.length;
+
+        HashSet<Integer> set = new HashSet<>();
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        for (int ele : arr) {
+            min = Math.min(min, ele);
+            max = Math.max(max, ele);
+            set.add(ele);
+        }
+
+        int commonDiff = (int) ((max - min) / (n - 1));
+        for (int i = 0; i < n; i++)
+            if (!set.contains(min + (i * commonDiff)))
+                return false;
+
+        return true;
+    }
+
     // *https://www.geeksforgeeks.org/count-pairs-in-array-whose-sum-is-divisible-by-k/
     public int pairSumDivisibleByK(int[] arr, int k) {
         HashMap<Integer, Integer> map = new HashMap<>();
@@ -77,7 +126,7 @@ public class methods {
             if (map.get(i++) != map.get(j--))
                 return false;
 
-        if (k % 2 == 0 && map.get(k - 2) % 2 == 1)
+        if (k % 2 == 0 && map.get(k / 2) % 2 == 1)
             return false;
 
         return true;
@@ -307,7 +356,7 @@ public class methods {
         return true;
     }
 
-    // *https://leetcode.com/problems/fraction-to-recurring-decimal/submissions/
+    // *https://leetcode.com/problems/fraction-to-recurring-decimal/
     public String recurringFraction(int numerator, int denominator) {
 
         long nr = numerator;
@@ -382,12 +431,12 @@ public class methods {
             map.put(ele, map.get(ele) + 1);
         }
 
+        if (zero.size() % 2 != 0)
+            return false;
+
         Collections.sort(positive);
         Collections.sort(negative);
         Collections.reverse(negative);
-
-        if (zero.size() % 2 != 0)
-            return false;
 
         for (int i = 0; i < positive.size(); i++) {
             int key = positive.get(i);
@@ -416,29 +465,6 @@ public class methods {
         return true;
     }
 
-    public boolean isArithmeticSequence(int[] arr) {
-        if (arr.length == 0 || arr.length == 1)
-            return true;
-
-        int n = arr.length;
-
-        HashSet<Integer> set = new HashSet<>();
-        int min = Integer.MAX_VALUE;
-        int max = Integer.MIN_VALUE;
-        for (int ele : arr) {
-            min = Math.min(min, ele);
-            max = Math.max(max, ele);
-            set.add(ele);
-        }
-
-        int commonDiff = (int) ((max - min) / (n - 1));
-        for (int i = 0; i < n; i++)
-            if (!set.contains(min + (i * commonDiff)))
-                return false;
-
-        return true;
-    }
-
     // *https://www.geeksforgeeks.org/count-pairs-two-sorted-matrices-given-sum/
     public int countPairsFromSortedMatrices(int[][] arr1, int[][] arr2, int target) {
         int m = arr1.length;
@@ -448,7 +474,7 @@ public class methods {
 
         int i = 0;
         int j = n * m - 1;
-        while (i < j) {
+        while (i < n * m - 1 && j >= 0) {
 
             int r1 = i / n;
             int c1 = i % n;
@@ -575,7 +601,7 @@ public class methods {
         return res;
     }
 
-    // **https://leetcode.com/problems/powerful-integers/submissions/
+    // **https://leetcode.com/problems/powerful-integers/
     public List<Integer> powerfulIntegers(int x, int y, int bound) {
 
         ArrayList<Integer> a = new ArrayList<>();
@@ -606,7 +632,7 @@ public class methods {
         return ans;
     }
 
-    // *https://leetcode.com/problems/subdomain-visit-count/submissions/
+    // *https://leetcode.com/problems/subdomain-visit-count/
     public List<String> subDomainVisitCount(String[] domains) {
 
         int n = domains.length;
@@ -641,7 +667,7 @@ public class methods {
         return res;
     }
 
-    // *https://leetcode.com/problems/x-of-a-kind-in-a-deck-of-cards/submissions/
+    // *https://leetcode.com/problems/x-of-a-kind-in-a-deck-of-cards/
     public boolean divisionIntoGroups(int[] arr) {
         HashMap<Integer, Integer> map = new HashMap<>();
         for (int ele : arr)
@@ -660,7 +686,7 @@ public class methods {
         return (b == 0) ? a : gcd(b, a % b);
     }
 
-    // *https://leetcode.com/problems/brick-wall/submissions/
+    // *https://leetcode.com/problems/brick-wall/
     public int brickWalls(List<List<Integer>> list) {
 
         HashMap<Integer, Integer> map = new HashMap<>();
@@ -682,7 +708,34 @@ public class methods {
 
     }
 
-    // *https://leetcode.com/problems/maximum-frequency-stack/submissions/
+    // *https://leetcode.com/problems/relative-sort-array/
+    public int[] relativeSortArray(int[] x, int[] y) {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < y.length; i++)
+            map.put(y[i], i);
+
+        PriorityQueue<Integer> pq = new PriorityQueue<>(
+                (a, b) -> map.get(a) - map.get(b));
+
+        for (int ele : x)
+            if (map.containsKey(ele))
+                pq.add(ele);
+
+        int i = 0;
+        int[] res = new int[x.length];
+        for (i = 0; i < x.length && !pq.isEmpty(); i++)
+            res[i] = pq.remove();
+
+        pq = new PriorityQueue<>();
+        for (int ele : x)
+            if (!map.containsKey(ele))
+                pq.add(ele);
+        for (; i < x.length && !pq.isEmpty(); i++)
+            res[i] = pq.remove();
+        return res;
+    }
+
+    // *https://leetcode.com/problems/maximum-frequency-stack/
     class FreqStack {
 
         HashMap<Integer, Integer> map;
@@ -715,7 +768,7 @@ public class methods {
         }
     }
 
-    // *https://leetcode.com/problems/encode-and-decode-tinyurl/submissions/
+    // *https://leetcode.com/problems/encode-and-decode-tinyurl/
     public class TinyURL {
 
         ArrayList<Character> list;
@@ -863,59 +916,6 @@ public class methods {
 
             return list.get(idx);
         }
-    }
-
-    // *https://leetcode.com/problems/relative-sort-array/submissions/
-    public int[] relativeSortArray(int[] x, int[] y) {
-        HashMap<Integer, Integer> map = new HashMap<>();
-        for (int i = 0; i < y.length; i++)
-            map.put(y[i], i);
-
-        PriorityQueue<Integer> pq = new PriorityQueue<>(
-                (a, b) -> map.get(a) - map.get(b));
-
-        for (int ele : x)
-            if (map.containsKey(ele))
-                pq.add(ele);
-
-        int i = 0;
-        int[] res = new int[x.length];
-        for (i = 0; i < x.length && !pq.isEmpty(); i++)
-            res[i] = pq.remove();
-
-        pq = new PriorityQueue<>();
-        for (int ele : x)
-            if (!map.containsKey(ele))
-                pq.add(ele);
-        for (; i < x.length && !pq.isEmpty(); i++)
-            res[i] = pq.remove();
-        return res;
-    }
-
-    // *https://www.geeksforgeeks.org/largest-subset-whose-all-elements-are-fibonacci-numbers/
-    public int largestFibonacciSubsequence(int[] arr) {
-        int max = Integer.MIN_VALUE;
-        for (int ele : arr)
-            max = Math.max(max, ele);
-
-        HashSet<Integer> set = new HashSet<>();
-
-        set.add(0);
-
-        int i = 0;
-        int j = 0;
-        while (i + j < max) {
-            int sum = i + j;
-            i = j;
-            j = sum;
-            set.add(sum);
-        }
-
-        int count = 0;
-        for (int ele : arr)
-            if (set.contains(ele))
-                count++;
-        return count;
     }
 
 }

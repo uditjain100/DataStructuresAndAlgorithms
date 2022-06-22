@@ -159,40 +159,123 @@ public class methods {
         return res;
     }
 
-    public class LRUCache {
+    public class LRUCache1 {
 
-        ArrayDeque<int[]> queue;
+        ArrayDeque<Integer> queue;
         HashMap<Integer, int[]> map;
         int capacity;
 
-        public LRUCache(int cap) {
+        public LRUCache1(int cap) {
             queue = new ArrayDeque<>();
             map = new HashMap<>();
             this.capacity = cap;
         }
 
         public void put(int key, int value) {
-            if (map.containsKey(key)) {
-                queue.remove(map.get(key));
-                map.put(key, new int[] { key, value });
-                queue.addLast(map.get(key));
-            } else {
-                if (map.size() == capacity) {
-                    int[] re = queue.removeFirst();
-                    map.remove(re[0]);
-                }
-                int[] nn = new int[] { key, value };
-                map.put(key, nn);
-                queue.addLast(nn);
+            if (map.containsKey(key))
+                queue.remove(key);
+            else {
+                if (map.size() == capacity)
+                    map.remove(queue.removeFirst());
             }
+            map.put(key, new int[] { key, value });
+            queue.addLast(key);
         }
 
         public int get(int key) {
             if (!map.containsKey(key))
                 return -1;
-            queue.remove(map.get(key));
-            queue.addLast(map.get(key));
+            queue.remove(key);
+            queue.addLast(key);
             return map.get(key)[1];
+        }
+
+    }
+
+    public class LRUCache2 {
+
+        public class Node {
+
+            Node prev, next;
+            int key, value;
+
+            public Node(int key, int value) {
+                this.prev = this.next = null;
+                this.key = key;
+                this.value = value;
+            }
+
+        }
+
+        public Node head;
+        public Node tail;
+
+        HashMap<Integer, Node> map;
+        int capacity;
+
+        public LRUCache2(int cap) {
+            this.head = this.tail = null;
+            map = new HashMap<>();
+            this.capacity = cap;
+        }
+
+        public void add(Node nn) {
+            if (this.head == null) {
+                this.head = this.tail = nn;
+            } else {
+                this.tail.next = nn;
+                nn.prev = this.tail;
+                this.tail = nn;
+            }
+        }
+
+        public void remove(Node node) {
+
+            if (node.prev == null && node.next == null) {
+                this.head = this.tail = node = null;
+            } else if (node.prev == null) { // head
+                Node newHead = node.next;
+                node.next = null;
+                newHead.prev = null;
+                this.head = newHead;
+            } else if (node.next == null) { // tail
+                Node newTail = node.prev;
+                node.prev = null;
+                newTail.next = null;
+                this.tail = newTail;
+            } else {
+                Node p = node.prev;
+                Node n = node.next;
+                p.next = n;
+                n.prev = p;
+                node.prev = node.next = null;
+            }
+
+        }
+
+        public void put(int key, int value) {
+            Node nn = null;
+            if (map.containsKey(key)) {
+                nn = map.get(key);
+                remove(map.get(key));
+                nn.value = value;
+            } else {
+                if (this.capacity == map.size()) {
+                    map.remove(this.head.key);
+                    remove(this.head);
+                }
+                nn = new Node(key, value);
+            }
+            add(nn);
+            map.put(key, nn);
+        }
+
+        public int get(int key) {
+            if (!map.containsKey(key))
+                return -1;
+            remove(map.get(key));
+            add(map.get(key));
+            return map.get(key).value;
         }
 
     }

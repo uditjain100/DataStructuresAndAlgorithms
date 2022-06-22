@@ -104,8 +104,8 @@ public class intro {
     }
 
     public int countSmallerNumbersWithSameSetBits(int n, int bits, int i) {
-        if (n == 0 || n == 1)
-            return n;
+        if (i == 0 || i == 1)
+            return 0;
 
         int mask = (1 << i);
         int ans = 0;
@@ -133,7 +133,7 @@ public class intro {
 
     public int copyBitsInRange(int x, int y, int l, int r) {
         for (int i = l; i <= r; i++)
-            copyParticularBit(x, y, i);
+            x = copyParticularBit(x, y, i);
         return x;
     }
 
@@ -284,6 +284,8 @@ public class intro {
             return Integer.MAX_VALUE;
         if (a < 0 && b == 0)
             return Integer.MIN_VALUE;
+        if (a == 0)
+            return 0;
         if (b == 1)
             return a;
 
@@ -307,8 +309,7 @@ public class intro {
         return (sign == 1) ? -quotient : quotient;
     }
 
-    // ? *** we can calculate square without recursion i.e, 15*15 -> 15*(8 + 4 + 2 +
-    // 1)
+    // ? *we can calculate square without recursion i.e, 15*15 -> 15*(8 + 4 + 2 + 1)
     public int square(int num) {
         if (num == 0 || num == 1)
             return num;
@@ -652,8 +653,10 @@ public class intro {
         trie.insert(arr[0]);
 
         int ans = 0;
-        for (int i = 1; i < arr.length; i++)
+        for (int i = 1; i < arr.length; i++) {
             ans += trie.countLessNumbers(arr[i], r) - trie.countLessNumbers(arr[i], l - 1);
+            trie.insert(arr[i]);
+        }
         return ans;
     }
 
@@ -681,6 +684,50 @@ public class intro {
             trie.insert(arr[i]);
         }
         return res;
+    }
+
+    // *https://www.geeksforgeeks.org/find-n-th-number-whose-binary-representation-palindrome/
+    public int nthPalindromicBinary(int n) {
+        int count = 1;
+        int len = 1;
+
+        while (count < n) {
+            len++;
+            count += (1 << ((len - 1) / 2));
+        }
+
+        count -= (1 << ((len - 1) / 2));
+        int offset = n - count - 1;
+
+        int ans = ((1 << (len - 1)) | (offset << (len / 2)));
+        int reverse = reverseBits((ans >> (len / 2)));
+
+        return ans | reverse;
+    }
+
+    // *https://leetcode.com/problems/utf-8-validation/
+    public boolean validUtf8(int[] arr) {
+        int rb = 0;
+        for (int ele : arr) {
+            if (rb == 0)
+                if ((ele >> 7) == 0b0)
+                    rb = 0;
+                else if ((ele >> 5) == 0b110)
+                    rb = 1;
+                else if ((ele >> 4) == 0b1110)
+                    rb = 2;
+                else if ((ele >> 3) == 0b11110)
+                    rb = 3;
+                else
+                    return false;
+            else {
+                if ((ele >> 6) == 0b10)
+                    rb--;
+                else
+                    return false;
+            }
+        }
+        return rb == 0;
     }
 
 }

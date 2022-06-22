@@ -7,6 +7,42 @@ import Stack.intro_stack.Stack;
 
 public class methods extends LinkedList {
 
+    public void swap(Node n1, Node n2) {
+        int temp = n1.value;
+        n1.value = n2.value;
+        n2.value = temp;
+    }
+
+    public int size(Node node) {
+
+        Node curr = node;
+        int count = 0;
+        while (curr != null) {
+            curr = curr.next;
+            count++;
+        }
+        return count;
+    }
+
+    public Node getMiddle(Node node) {
+
+        Node slow = node;
+        Node fast = node;
+        if (size(node) % 2 != 0) {
+            while (fast != null && fast.next != null) {
+                slow = slow.next;
+                fast = fast.next.next;
+            }
+        } else {
+            slow = null;
+            while (fast != null && fast.next != null) {
+                slow = (slow != null) ? slow.next : node;
+                fast = fast.next.next;
+            }
+        }
+        return slow;
+    }
+
     // **** When head of List is not given
     public boolean deleteNode(Node nodeToBeDeleted) {
         if (nodeToBeDeleted.next == null)
@@ -17,9 +53,260 @@ public class methods extends LinkedList {
         return true;
     }
 
+    public Node deleteNodeHavingGreaterValueOnLeftSide(Node head) {
+        if (head == null || head.next == null)
+            return head;
+
+        Node curr = head;
+        int max = curr.value;
+        while (curr != null) {
+            if (curr.next.value < max) {
+                curr.next = curr.next.next;
+            } else {
+                max = Math.max(max, curr.next.value);
+                curr = curr.next;
+            }
+        }
+        return head;
+    }
+
+    public Node deleteNodeHavingGreaterValueOnRightSide1(Node head) {
+        if (head == null || head.next == null)
+            return head;
+
+        head = reverse(head);
+        head = deleteNodeHavingGreaterValueOnLeftSide(head);
+        head = reverse(head);
+
+        return head;
+    }
+
+    // *** Traverse the list from the start and delete the node when the current
+    // *** Node < next Node
+    public Node deleteNodeHavingGreaterValueOnRightSide2(Node head) {
+        if (head == null || head.next == null)
+            return head;
+
+        Node next = deleteNodeHavingGreaterValueOnLeftSide(head.next);
+
+        if (head.value < next.value)
+            return next;
+
+        head.next = next;
+        return head;
+    }
+
     public Node removeAtFromLast(Node node, int k) {
-        k = customSize(node) - k + 1;
+        k = size(node) - k + 1;
         return removeAt(node, k);
+    }
+
+    public Node reverse(Node head) {
+
+        Node prev = null;
+        Node curr = head;
+        Node next = null;
+
+        while (curr != null) {
+            next = curr.next;
+            curr.next = prev;
+
+            prev = curr;
+            curr = next;
+        }
+
+        return prev;
+    }
+
+    public Node reverseSubList(Node head, int si, int ei) {
+
+        int n = size(head);
+
+        if (si < 1)
+            si = 1;
+        if (ei > n)
+            ei = n;
+        if (si >= ei)
+            return head;
+        if (si == 1 && ei == n)
+            return reverse(head);
+
+        Node prev = (si == 1) ? null : getAt(head, si - 1);
+        Node next = getAt(head, ei);
+
+        Node sn = (prev != null) ? prev.next : head;
+        Node en = next;
+
+        next = next.next;
+
+        if (prev != null)
+            prev.next = null;
+
+        en.next = null;
+
+        sn = reverse(sn);
+
+        Node curr = sn;
+        while (curr.next != null)
+            curr = curr.next;
+        curr.next = next;
+
+        if (prev == null)
+            return sn;
+        prev.next = sn;
+        return head;
+    }
+
+    public Node reverseInGroupsOfK(Node head, int k) {
+
+        int n = size(head);
+
+        int numberOfGroups = n / k;
+
+        int si = 1;
+        int ei = k;
+        Node curr = head;
+        for (int i = 0; i < numberOfGroups; i++) {
+            curr = reverseSubList(curr, si, ei);
+            si = ei + 1;
+            ei = ei + k;
+        }
+
+        ei = n;
+
+        return reverseSubList(curr, si, ei);
+    }
+
+    public void reverseData(Node head) {
+
+        if (head == null || head.next == null)
+            return;
+
+        Node curr = head;
+        Node mid = getMiddle(head);
+
+        Node newHead = mid.next;
+        newHead = reverse(newHead);
+        mid.next = null;
+
+        Node newCurr = newHead;
+        while (curr != null && newCurr != null) {
+            swap(curr, newCurr);
+            curr = curr.next;
+            newCurr = newCurr.next;
+        }
+
+        newHead = reverse(newHead);
+        mid.next = newHead;
+    }
+
+    public boolean isPalinDrome(Node head) {
+
+        Node curr = head;
+        Node mid = getMiddle(head);
+
+        Node newHead = mid.next;
+        newHead = reverse(newHead);
+        mid.next = null;
+
+        Node newCurr = newHead;
+        while (curr != null && newCurr != null) {
+            if (curr.value != newCurr.value)
+                return false;
+            curr = curr.next;
+            newCurr = newCurr.next;
+        }
+
+        newHead = reverse(newHead);
+        mid.next = newHead;
+        return true;
+    }
+
+    public Node rotateList(Node head, int k) {
+
+        int n = size(head);
+
+        if (k < 0 || k >= n) {
+            k += n;
+            k %= n;
+        }
+
+        if (k == 0)
+            return head;
+
+        Node curr = head;
+        while (k-- > 1)
+            curr = curr.next;
+
+        Node newHead = curr.next;
+        curr.next = null;
+
+        curr = newHead;
+        while (curr.next != null)
+            curr = curr.next;
+        curr.next = head;
+
+        return newHead;
+    }
+
+    public Node rotateSubList(Node head, int si, int ei, int k) {
+
+        int n = size(head);
+        if (si < 1)
+            si = 1;
+        if (ei > n)
+            ei = n;
+        if (si >= ei)
+            return head;
+        if (si == 1 && ei == n)
+            return rotateList(head, k);
+
+        Node prev = (si == 1) ? null : getAt(head, si - 1);
+        Node next = getAt(head, ei);
+
+        Node sn = (prev != null) ? prev.next : head;
+        Node en = next;
+
+        next = next.next;
+
+        if (prev != null)
+            prev.next = null;
+
+        en.next = null;
+
+        sn = rotateList(sn, k);
+
+        Node curr = sn;
+        while (curr.next != null)
+            curr = curr.next;
+        curr.next = next;
+
+        if (prev == null)
+            return sn;
+        prev.next = sn;
+        return head;
+    }
+
+    // ? size : size of each group and k : rotating factor
+    public Node rotateInGroupsOfK(Node head, int size, int k) {
+
+        int n = size(head);
+
+        int numberOfGroups = n / size;
+
+        int si = 1;
+        int ei = size;
+
+        Node curr = head;
+        for (int i = 0; i < numberOfGroups; i++) {
+            curr = rotateSubList(curr, si, ei, k);
+            si = ei + 1;
+            ei = ei + size;
+        }
+
+        ei = n;
+
+        return rotateSubList(curr, si, ei, k);
     }
 
     public boolean cycleDetection(Node head) {
@@ -73,248 +360,10 @@ public class methods extends LinkedList {
         return cycleTailIntersection(head);
     }
 
-    public Node customReverse(Node head) {
-
-        Node prev = null;
-        Node curr = head;
-        Node next = null;
-
-        while (curr != null) {
-            next = curr.next;
-            curr.next = prev;
-
-            prev = curr;
-            curr = next;
-        }
-
-        return prev;
-    }
-
-    public int customSize(Node node) {
-
-        Node curr = node;
-        int count = 0;
-        while (curr != null) {
-            curr = curr.next;
-            count++;
-        }
-        return count;
-    }
-
-    public Node customMiddle(Node node) {
-
-        Node slow = node;
-        Node fast = node;
-        if (customSize(node) % 2 != 0) {
-            while (fast != null && fast.next != null) {
-                slow = slow.next;
-                fast = fast.next.next;
-            }
-        } else {
-            slow = null;
-            while (fast != null && fast.next != null) {
-                slow = (slow != null) ? slow.next : node;
-                fast = fast.next.next;
-            }
-        }
-        return slow;
-    }
-
-    public void reverseData(Node head) {
-
-        if (head == null || head.next == null)
-            return;
-
-        Node curr = head;
-        Node mid = customMiddle(head);
-
-        Node newHead = mid.next;
-        newHead = customReverse(newHead);
-        mid.next = null;
-
-        Node newCurr = newHead;
-        while (curr != null && newCurr != null) {
-            swap(curr, newCurr);
-            curr = curr.next;
-            newCurr = newCurr.next;
-        }
-
-        newHead = customReverse(newHead);
-        mid.next = newHead;
-    }
-
-    public boolean isPalinDrome(Node head) {
-
-        Node curr = head;
-        Node mid = customMiddle(head);
-
-        Node newHead = mid.next;
-        newHead = customReverse(newHead);
-        mid.next = null;
-
-        Node newCurr = newHead;
-        while (curr != null && newCurr != null) {
-            if (curr.value != newCurr.value)
-                return false;
-            curr = curr.next;
-            newCurr = newCurr.next;
-        }
-
-        newHead = customReverse(newHead);
-        mid.next = newHead;
-        return true;
-    }
-
-    public Node reverseSubList(Node head, int si, int ei) {
-
-        int n = customSize(head);
-
-        if (si < 1)
-            si = 1;
-        if (ei > n)
-            ei = n;
-        if (si >= ei)
-            return head;
-        if (si == 1 && ei == n)
-            return customReverse(head);
-
-        Node prev = (si == 1) ? null : getAt(head, si - 1);
-        Node next = getAt(head, ei);
-
-        Node sn = (prev != null) ? prev.next : head;
-        Node en = next;
-
-        next = next.next;
-
-        if (prev != null)
-            prev.next = null;
-
-        en.next = null;
-
-        sn = customReverse(sn);
-
-        Node curr = sn;
-        while (curr.next != null)
-            curr = curr.next;
-        curr.next = next;
-
-        if (prev == null)
-            return sn;
-        prev.next = sn;
-        return head;
-    }
-
-    public Node reverseInGroupsOfK(Node head, int k) {
-
-        int n = customSize(head);
-
-        int numberOfGroups = n / k;
-
-        int si = 1;
-        int ei = k;
-        Node curr = head;
-        for (int i = 0; i < numberOfGroups; i++) {
-            curr = reverseSubList(curr, si, ei);
-            si = ei + 1;
-            ei = ei + k;
-        }
-
-        ei = n;
-
-        return reverseSubList(curr, si, ei);
-    }
-
-    public Node rotateList(Node head, int k) {
-
-        int n = customSize(head);
-
-        if (k < 0 || k >= n) {
-            k += n;
-            k %= n;
-        }
-
-        if (k == 0)
-            return head;
-
-        Node curr = head;
-        while (k-- > 1)
-            curr = curr.next;
-
-        Node newHead = curr.next;
-        curr.next = null;
-
-        curr = newHead;
-        while (curr.next != null)
-            curr = curr.next;
-        curr.next = head;
-
-        return newHead;
-    }
-
-    public Node rotateSubList(Node head, int si, int ei, int k) {
-
-        int n = customSize(head);
-        if (si < 1)
-            si = 1;
-        if (ei > n)
-            ei = n;
-        if (si >= ei)
-            return head;
-        if (si == 1 && ei == n)
-            return rotateList(head, k);
-
-        Node prev = (si == 1) ? null : getAt(head, si - 1);
-        Node next = getAt(head, ei);
-
-        Node sn = (prev != null) ? prev.next : head;
-        Node en = next;
-
-        next = next.next;
-
-        if (prev != null)
-            prev.next = null;
-
-        en.next = null;
-
-        sn = rotateList(sn, k);
-
-        Node curr = sn;
-        while (curr.next != null)
-            curr = curr.next;
-        curr.next = next;
-
-        if (prev == null)
-            return sn;
-        prev.next = sn;
-        return head;
-    }
-
-    // ? size : size of each group and k : rotating factor
-    public Node rotateInGroupsOfK(Node head, int size, int k) {
-
-        int n = customSize(head);
-
-        int numberOfGroups = n / size;
-
-        int si = 1;
-        int ei = size;
-
-        Node curr = head;
-        for (int i = 0; i < numberOfGroups; i++) {
-            curr = rotateSubList(curr, si, ei, k);
-            si = ei + 1;
-            ei = ei + size;
-        }
-
-        ei = n;
-
-        return rotateSubList(curr, si, ei, k);
-    }
-
     public Node sum(Node h1, Node h2) {
 
-        int n1 = customSize(h1);
-        int n2 = customSize(h2);
+        int n1 = size(h1);
+        int n2 = size(h2);
 
         Stack s1 = new Stack(n1);
         Stack s2 = new Stack(n2);
@@ -364,13 +413,13 @@ public class methods extends LinkedList {
         head.next = null;
         head = next;
 
-        return customReverse(head);
+        return reverse(head);
     }
 
     public Node getLargerOne(Node h1, Node h2) {
 
-        int n1 = customSize(h1);
-        int n2 = customSize(h2);
+        int n1 = size(h1);
+        int n2 = size(h2);
 
         if (n1 > n2)
             return h1;
@@ -393,8 +442,8 @@ public class methods extends LinkedList {
 
     public Node getSmallerOne(Node h1, Node h2) {
 
-        int n1 = customSize(h1);
-        int n2 = customSize(h2);
+        int n1 = size(h1);
+        int n2 = size(h2);
 
         if (n1 > n2)
             return h2;
@@ -423,8 +472,8 @@ public class methods extends LinkedList {
         h1 = getLargerOne(nh1, nh2);
         h2 = getSmallerOne(nh1, nh2);
 
-        int n1 = customSize(h1);
-        int n2 = customSize(h2);
+        int n1 = size(h1);
+        int n2 = size(h2);
 
         Stack s1 = new Stack(n1);
         Stack s2 = new Stack(n2);
@@ -493,7 +542,7 @@ public class methods extends LinkedList {
         head.next = null;
         head = next;
 
-        head = customReverse(head);
+        head = reverse(head);
 
         while (head != null && head.value == 0)
             head = head.next;
@@ -530,7 +579,7 @@ public class methods extends LinkedList {
         head.next = null;
         head = next;
 
-        head = customReverse(head);
+        head = reverse(head);
         if (head == null)
             head = new Node(0);
         return head;
@@ -623,10 +672,10 @@ public class methods extends LinkedList {
             return head;
 
         Node curr = head;
-        Node mid = customMiddle(head);
+        Node mid = getMiddle(head);
 
         Node newHead = mid.next;
-        newHead = customReverse(newHead);
+        newHead = reverse(newHead);
         mid.next = null;
 
         Node nn = new Node(-1);
@@ -774,7 +823,7 @@ public class methods extends LinkedList {
         if (head == null || head.next == null)
             return head;
 
-        Node mid = customMiddle(head);
+        Node mid = getMiddle(head);
         Node newHead = mid.next;
         mid.next = null;
 
@@ -826,7 +875,7 @@ public class methods extends LinkedList {
 
     public Node[] partition(Node head, int idx) {
 
-        int n = customSize(head);
+        int n = size(head);
 
         if (idx >= n || idx < 0 || head == null || head.next == null)
             return new Node[] { head, head, head };
@@ -887,7 +936,7 @@ public class methods extends LinkedList {
         if (head == null || head.next == null)
             return new Node[] { head, head };
 
-        int n = customSize(head);
+        int n = size(head);
         int pivotIdx = n / 2;
 
         Node[] partitionedList = partition(head, pivotIdx);
@@ -971,7 +1020,7 @@ public class methods extends LinkedList {
             curr = curr.next;
         }
 
-        newHead = customReverse(newHead);
+        newHead = reverse(newHead);
 
         curr = head;
         newCurr = newHead;
@@ -1011,7 +1060,7 @@ public class methods extends LinkedList {
             curr = curr.next;
         }
 
-        newHead = customReverse(newHead);
+        newHead = reverse(newHead);
 
         curr = head;
         newCurr = newHead;
@@ -1043,7 +1092,7 @@ public class methods extends LinkedList {
         head1 = mergeSort(head1);
         head2 = mergeSort(head2);
 
-        head2 = customReverse(head2);
+        head2 = reverse(head2);
 
         Node curr = head1;
         Node newCurr = head2;
@@ -1071,7 +1120,7 @@ public class methods extends LinkedList {
         head1 = mergeSort(head1);
         head2 = mergeSort(head2);
 
-        head2 = customReverse(head2);
+        head2 = reverse(head2);
 
         Node curr = head1;
         Node newCurr = head2;
@@ -1181,55 +1230,6 @@ public class methods extends LinkedList {
         }
 
         return res;
-    }
-
-    public Node deleteNodeHavingGreaterValueOnLeftSide(Node head) {
-        if (head == null || head.next == null)
-            return head;
-
-        Node curr = head;
-        int max = curr.value;
-        while (curr != null) {
-            if (curr.next.value < max) {
-                curr.next = curr.next.next;
-            } else {
-                max = Math.max(max, curr.next.value);
-                curr = curr.next;
-            }
-        }
-        return head;
-    }
-
-    public Node deleteNodeHavingGreaterValueOnRightSide1(Node head) {
-        if (head == null || head.next == null)
-            return head;
-
-        head = customReverse(head);
-        head = deleteNodeHavingGreaterValueOnLeftSide(head);
-        head = customReverse(head);
-
-        return head;
-    }
-
-    // *** Traverse the list from the start and delete the node when the current
-    // *** Node < next Node
-    public Node deleteNodeHavingGreaterValueOnRightSide2(Node head) {
-        if (head == null || head.next == null)
-            return head;
-
-        Node next = deleteNodeHavingGreaterValueOnLeftSide(head.next);
-
-        if (head.value < next.value)
-            return next;
-
-        head.next = next;
-        return head;
-    }
-
-    public void swap(Node n1, Node n2) {
-        int temp = n1.value;
-        n1.value = n2.value;
-        n2.value = temp;
     }
 
 }

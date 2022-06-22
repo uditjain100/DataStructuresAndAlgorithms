@@ -331,9 +331,6 @@ public class methods {
         return heap.getTopElement();
     }
 
-    // **** Given a string s, rearrange the characters of s so that any two adjacent
-    // *** characters are not the same.
-
     // **** https://leetcode.com/problems/reorganize-string/
     public String rearrangeString(String str) {
 
@@ -372,10 +369,6 @@ public class methods {
             return sb.append(pq.remove()).toString();
         return sb.toString();
     }
-
-    // *** Given an array Arr of size N such that each element is from the range 0
-    // *** to 9. Find the minimum possible sum of two numbers formed using the
-    // *** elements of the array
 
     // ***** https://practice.geeksforgeeks.org/problems/minimum-sum4058/1
     public int findMinSum(int[] arr) {

@@ -1,10 +1,9 @@
 package Stack;
 
 import java.util.*;
-
 import LinkedList.intro_ll.DLLMiddle;
 import LinkedList.intro_ll.LinkedList;
-import Queue.intro_queue.Queue;;
+import Queue.intro_queue.Queue;
 
 public class intro_stack {
 
@@ -172,7 +171,12 @@ public class intro_stack {
         }
 
         public void push(int ele) {
-            pq.offer(ele);
+            PriorityQueue<Integer> helper = new PriorityQueue<>();
+            while (!this.pq.isEmpty())
+                helper.offer(this.pq.poll());
+            helper.offer(ele);
+            while (!helper.isEmpty())
+                this.pq.offer(helper.poll());
         }
 
         public int pop() {

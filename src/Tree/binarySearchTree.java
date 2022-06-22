@@ -158,6 +158,48 @@ public class binarySearchTree {
         }
     }
 
+    public TreeNode prev, first, second, third;
+
+    public void recoverBST(TreeNode node) {
+        this.prev = this.first = this.second = this.third = null;
+        customTraversal(this.root);
+        if (third == null) // *** Adjacent Case
+            swap(this.first, this.second);
+        else // *** Non Adjacent Case
+            swap(this.second, this.third);
+    }
+
+    public void customTraversal(TreeNode node) {
+        if (node == null)
+            return;
+        customTraversal(node.left);
+
+        if (prev != null && node.value < prev.value) {
+            if (first == null) {
+                first = prev;
+                second = node;
+            } else
+                third = node;
+        }
+        prev = node;
+
+        customTraversal(node.right);
+    }
+
+    public boolean isBST(TreeNode node) {
+        return isBST(node, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    }
+
+    private boolean isBST(TreeNode node, int lb, int ub) {
+        if (node == null)
+            return true;
+
+        if (node.value < lb || node.value > ub)
+            return false;
+
+        return isBST(node.left, lb, node.value) && isBST(node.right, node.value, ub);
+    }
+
     public void add(int num) {
         this.root = add(this.root, num);
     }
@@ -178,20 +220,6 @@ public class binarySearchTree {
         this.root = remove(this.root, num);
     }
 
-    public TreeNode customMax(TreeNode node) {
-        if (node == null)
-            return node;
-        if (node.right == null)
-            return node;
-        return customMax(node.right);
-    }
-
-    public void swap(TreeNode a, TreeNode b) {
-        int temp = a.value;
-        a.value = b.value;
-        b.value = temp;
-    }
-
     private TreeNode remove(TreeNode node, int num) {
         if (node == null)
             return node;
@@ -203,33 +231,11 @@ public class binarySearchTree {
         else {
             if (node.left == null || node.right == null)
                 return (node.left == null) ? node.right : node.left;
-            TreeNode max = customMax(node.left);
-            node.value = max.value;
-            node.left = remove(node.left, max.value);
+            int maxValue = max(node.left);
+            node.value = maxValue;
+            node.left = remove(node.left, maxValue);
         }
         return node;
-    }
-
-    public int size() {
-        return size(this.root);
-    }
-
-    private int size(TreeNode node) {
-        if (node == null)
-            return 0;
-
-        return size(node.left) + size(node.right) + 1;
-    }
-
-    public int height() {
-        return height(this.root);
-    }
-
-    private int height(TreeNode node) {
-        if (node == null)
-            return -1;
-
-        return Math.max(height(node.left), height(node.right)) + 1;
     }
 
     public int max() {
@@ -273,35 +279,10 @@ public class binarySearchTree {
         return (node.value > target) ? find(node.left, target) : find(node.right, target);
     }
 
-    public int diameter() {
-        return diameter(this.root).diameter;
-    }
-
-    public class DiaPair {
-
-        int height;
-        int diameter;
-
-        public DiaPair(int h, int d) {
-            this.height = h;
-            this.diameter = d;
-        }
-
-    }
-
-    private DiaPair diameter(TreeNode node) {
-        if (node == null)
-            return new DiaPair(-1, 0);
-
-        DiaPair left = diameter(node.left);
-        DiaPair right = diameter(node.right);
-
-        DiaPair ndp = new DiaPair(-1, 0);
-
-        ndp.height = Math.max(left.height, right.height) + 1;
-        ndp.diameter = Math.max(Math.max(left.diameter, right.diameter), left.height + right.height + 2);
-
-        return ndp;
+    public void swap(TreeNode a, TreeNode b) {
+        int temp = a.value;
+        a.value = b.value;
+        b.value = temp;
     }
 
     public ArrayList<TreeNode> preOrder() {
@@ -352,159 +333,20 @@ public class binarySearchTree {
         list.add(node);
     }
 
-    public void levelOrder() {
-
-        LinkedList<TreeNode> queue = new LinkedList<>();
-        queue.addLast(this.root);
-
-        while (!queue.isEmpty()) {
-            int size = queue.size();
-            while (size-- > 0) {
-                TreeNode rn = queue.removeFirst();
-                System.out.println(rn.value);
-                if (rn.left != null)
-                    queue.addLast(rn.left);
-                if (rn.right != null)
-                    queue.addLast(rn.right);
-            }
-        }
-        System.out.println();
+    public ArrayList<Integer> rangeIn(int a, int b) {
+        ArrayList<Integer> list = new ArrayList<>();
+        rangeIn(this.root, a, b, list);
+        return list;
     }
 
-    public ArrayList<Integer> rootToNodePath(int num) {
-        ArrayList<Integer> path = new ArrayList<>();
-        rootToNodePath(this.root, num, path);
-        return path;
-    }
-
-    public void rootToNodePath(TreeNode node, int num, ArrayList<Integer> path) {
+    private void rangeIn(TreeNode node, int a, int b, ArrayList<Integer> list) {
         if (node == null)
             return;
 
-        path.add(node.value);
-        if (node.value > num)
-            rootToNodePath(node.left, num, path);
-        else if (node.value < num)
-            rootToNodePath(node.right, num, path);
-        return;
-    }
-
-    public int lowestCommonAncestor(int a, int b) {
-        return lowestCommonAncestor(this.root, a, b);
-    }
-
-    private int lowestCommonAncestor(TreeNode node, int a, int b) {
-        if (node == null)
-            return -1;
-
-        int ans = -1;
-        if (node.value < a && node.value < b)
-            ans = lowestCommonAncestor(node.right, a, b);
-        else if (node.value > a && node.value > b)
-            ans = lowestCommonAncestor(node.left, a, b);
-        else
-            ans = (find(a) && find(b)) ? node.value : -1;
-        return ans;
-    }
-
-    public boolean isBST(TreeNode node) {
-        return isBST(node, Integer.MIN_VALUE, Integer.MAX_VALUE);
-    }
-
-    private boolean isBST(TreeNode node, int lb, int ub) {
-        if (node == null)
-            return true;
-
-        if (node.value < lb || node.value > ub)
-            return false;
-
-        return isBST(node.left, lb, node.value) || isBST(node.right, node.value, ub);
-    }
-
-    // *** With Space
-    public int largestBST1(TreeNode node) {
-        ArrayList<TreeNode> list = new ArrayList<>();
-        inOrder(this.root, list);
-
-        int res = 1;
-        int count = 1;
-        for (int i = 0; i < list.size() - 1; i++) {
-            if (list.get(i).value < list.get(i + 1).value)
-                count++;
-            else {
-                res = Math.max(res, count);
-                count = 1;
-            }
-        }
-        res = Math.max(res, count);
-        return res;
-    }
-
-    public int largestBST2() {
-        return largestBST2(this.root).largestBSTsize;
-    }
-
-    class Node {
-        int min, max;
-        boolean isBst;
-        int size;
-        int largestBSTsize;
-
-        public Node() {
-            this.min = Integer.MAX_VALUE;
-            this.max = Integer.MIN_VALUE;
-            this.isBst = true;
-            this.largestBSTsize = this.size = 0;
-        }
-
-        public Node(int min, int max, boolean isBST, int size, int bstSize) {
-            this.min = min;
-            this.max = max;
-            this.isBst = isBST;
-            this.largestBSTsize = bstSize;
-            this.size = size;
-        }
-    }
-
-    private Node largestBST2(TreeNode node) {
-        if (node == null)
-            return new Node();
-
-        Node left = largestBST2(node.left);
-        Node right = largestBST2(node.right);
-
-        int min = Math.min(node.value, Math.min(left.min, right.min));
-        int max = Math.max(node.value, Math.max(left.max, right.max));
-        int size = left.size + right.size + 1;
-
-        if (left.isBst && right.isBst) {
-            if (left.max < node.value && right.min > node.value)
-                return new Node(min, max, true, size, size);
-            else
-                return new Node(min, max, false, size, Math.max(left.size, right.size));
-        }
-
-        return new Node(min, max, false, size, Math.max(left.largestBSTsize, right.largestBSTsize));
-    }
-
-    public void customInOrder(TreeNode node, ArrayList<TreeNode> list) {
-        if (node == null)
-            return;
-
-        customInOrder(node.left, list);
-        node.value = list.get(idx++).value;
-        customInOrder(node.right, list);
-    }
-
-    public TreeNode binaryToBST(TreeNode node) {
-        ArrayList<TreeNode> list = new ArrayList<>();
-        inOrder(this.root, list);
-
-        Collections.sort(list, (a, b) -> a.value - b.value);
-
-        this.idx = 0;
-        customInOrder(node, list);
-        return node;
+        rangeIn(node.left, a, b, list);
+        if (node.value <= a && node.value >= b)
+            list.add(node.value);
+        rangeIn(node.right, a, b, list);
     }
 
     public TreeNode rightMostOfLeft(TreeNode node) {
@@ -615,6 +457,42 @@ public class binarySearchTree {
         constructFromInOrder(arr); // ? Takes O(n) time
     }
 
+    public ArrayList<Integer> rootToNodePath(int num) {
+        ArrayList<Integer> path = new ArrayList<>();
+        rootToNodePath(this.root, num, path);
+        return path;
+    }
+
+    public void rootToNodePath(TreeNode node, int num, ArrayList<Integer> path) {
+        if (node == null)
+            return;
+
+        path.add(node.value);
+        if (node.value > num)
+            rootToNodePath(node.left, num, path);
+        else if (node.value < num)
+            rootToNodePath(node.right, num, path);
+        return;
+    }
+
+    public int lowestCommonAncestor(int a, int b) {
+        return lowestCommonAncestor(this.root, a, b);
+    }
+
+    private int lowestCommonAncestor(TreeNode node, int a, int b) {
+        if (node == null)
+            return -1;
+
+        int ans = -1;
+        if (node.value < a && node.value < b)
+            ans = lowestCommonAncestor(node.right, a, b);
+        else if (node.value > a && node.value > b)
+            ans = lowestCommonAncestor(node.left, a, b);
+        else
+            ans = (find(a) && find(b)) ? node.value : -1;
+        return ans;
+    }
+
     // ? Similarly for KthSmallest
     public int kthLargest(int k) {
         PriorityQueue<Integer> min = new PriorityQueue<>();
@@ -634,22 +512,7 @@ public class binarySearchTree {
         kthLargest(node.right, k, min);
     }
 
-    public ArrayList<Integer> rangeIn(int a, int b) {
-        ArrayList<Integer> list = new ArrayList<>();
-        rangeIn(this.root, a, b, list);
-        return list;
-    }
-
-    private void rangeIn(TreeNode node, int a, int b, ArrayList<Integer> list) {
-        if (node == null)
-            return;
-
-        rangeIn(node.left, a, b, list);
-        if (node.value <= a && node.value >= b)
-            list.add(node.value);
-        rangeIn(node.right, a, b, list);
-    }
-
+    // *https://www.geeksforgeeks.org/smallest-greater-element-on-right-side/
     public int[] leastGreaterElementOnItsRight(int[] arr) {
         this.root = null;
         int i = 0;
@@ -678,60 +541,6 @@ public class binarySearchTree {
             node.right = customAdd(node.right, num, i);
 
         return node;
-    }
-
-    public TreeNode prev, first, second, third;
-
-    public void recoverBST(TreeNode node) {
-        this.prev = this.first = this.second = this.third = null;
-        customTraversal(this.root);
-        if (third == null) // *** Adjacent Case
-            swap(this.first, this.second);
-        else // *** Non Adjacent Case
-            swap(this.second, this.third);
-    }
-
-    public void customTraversal(TreeNode node) {
-        if (node == null)
-            return;
-        customTraversal(node.left);
-
-        if (prev != null && node.value < prev.value) {
-            if (first == null) {
-                first = prev;
-                second = node;
-            } else
-                third = node;
-        }
-        prev = node;
-
-        customTraversal(node.right);
-    }
-
-    public TreeNode DLLprev;
-    public TreeNode DLLhead;
-
-    public void TreeToDLL() {
-        DLLprev = DLLhead = null;
-        DLL(this.root);
-        this.root = DLLhead;
-    }
-
-    private void DLL(TreeNode node) {
-        if (node == null)
-            return;
-
-        DLL(node.left);
-
-        if (DLLhead == null)
-            DLLhead = node;
-        else {
-            DLLprev.right = node;
-            node.left = DLLprev;
-        }
-        DLLprev = node;
-
-        DLL(node.right);
     }
 
 }

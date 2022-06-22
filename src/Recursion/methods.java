@@ -356,4 +356,42 @@ public class methods {
         return sb.toString();
     }
 
+    public boolean wordSearch1(char[][] board, String str) {
+
+        int n = board.length;
+        int m = board[0].length;
+
+        boolean res = false;
+        for (int i = 0; i < n; i++)
+            for (int j = 0; j < m; j++)
+                if (str.charAt(0) == board[i][j])
+                    res = res || dfs4Dir(str, 0, board, i, j, new boolean[n][m]);
+
+        return res;
+    }
+
+    int[][] dir2 = { { 0, 1 }, { 1, 0 }, { -1, 0 }, { 0, -1 } };
+
+    public boolean dfs4Dir(String str, int idx, char[][] board, int i, int j, boolean[][] visited) {
+
+        if (idx == str.length() - 1)
+            return true;
+
+        visited[i][j] = true;
+
+        boolean res = false;
+        for (int d = 0; d < dir2.length; d++) {
+
+            int x = i + dir2[d][0];
+            int y = j + dir2[d][1];
+
+            if (x >= 0 && y >= 0 && x < board.length && y < board[0].length && !visited[x][y]
+                    && str.charAt(idx + 1) == board[x][y])
+                res = res || dfs4Dir(str, idx + 1, board, x, y, visited);
+        }
+
+        visited[i][j] = false;
+        return res;
+    }
+
 }
